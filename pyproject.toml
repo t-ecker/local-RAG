@@ -7,7 +7,12 @@ authors = [
     { name = "t-ecker", email = "152566019+t-ecker@users.noreply.github.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "langchain-chroma>=1.1.0",
+    "langchain-ollama>=1.1.0",
+    "langchain-text-splitters>=1.1.2",
+    "pypdf>=6.18.1",
+]
 
 [project.scripts]
 local-rag = "local_rag.main:main"

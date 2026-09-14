@@ -221,8 +221,10 @@ __marimo__/
 
 data/
 *.sqlite3
-chroma/
 .chroma/
 *.faiss
 *.index
 models/
+
+chroma_db/
+sample_docs/
