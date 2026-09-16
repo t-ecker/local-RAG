@@ -5,20 +5,20 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from local_rag.config import Settings
 
 
-def load_pdf_pages(filePath: str) -> list[Document]:
-    reader = pypdf.PdfReader(filePath)
-    documents = []
+def load_pdf_pages(file_path: str) -> list[Document]:
+    reader = pypdf.PdfReader(file_path)
+    pages = []
     for i, page in enumerate(reader.pages, start=1):
-        documents.append(
+        pages.append(
             Document(
                 page_content=page.extract_text() or "",
-                metadata={"source": filePath, "page": i},
+                metadata={"source": file_path, "page": i},
             )
         )
-    return documents
+    return pages
 
 
-def chunk_text(docs: list[Document], settings: Settings):
+def split_pages(settings: Settings, docs: list[Document]) -> list[Document]:
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=settings.chunk_size,
         chunk_overlap=settings.chunk_overlap,
@@ -29,9 +29,8 @@ def chunk_text(docs: list[Document], settings: Settings):
     return chunks
 
 
-def ingest_documents(settings: Settings) -> list[Document]:
-    filePath = "./sample_docs/GlobalJusticeReport.pdf"
-    docs = load_pdf_pages(filePath)
-    chunks = chunk_text(docs, settings)
-    print(f"Seiten: {len(docs)}, Chunks: {len(chunks)}")
+def load_chunks(settings: Settings, pdf_path: str) -> list[Document]:
+    pages = load_pdf_pages(pdf_path)
+    chunks = split_pages(settings, pages)
+    print(f"Pages: {len(pages)}, Chunks: {len(chunks)}")
     return chunks
