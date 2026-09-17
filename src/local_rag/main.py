@@ -10,10 +10,10 @@ def main() -> None:
     store = DocumentStore(settings=settings)
     rag_engine = RagEngine(settings=settings, document_store=store)
 
-    pdf: str = "./sample_docs/1.pdf"
-    if not store.is_present(pdf):
-        print(f"adding {pdf}")
-        chunks = load_chunks(settings, pdf)
+    path: str = "./sample_docs/1.pdf"
+    if not store.is_present(path):
+        print(f"adding {path}")
+        chunks = load_chunks(settings, path)
         store.add_in_batches(chunks)
 
     while True:

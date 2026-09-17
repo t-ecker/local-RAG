@@ -19,9 +19,11 @@ def build_messages(
 ) -> list[tuple[str, str]]:
     context = ""
     for doc, score in results:
+        page = doc.metadata.get("page")
+        page_label = f"page {page}, " if page is not None else ""
         context += (
             f"\n\n[Source: {doc.metadata.get('source')}, "
-            f"page {doc.metadata.get('page')}, score={score:.3f}]\n"
+            f"{page_label}score={score:.3f}]\n"
             f"{doc.page_content}"
         )
     print(f"\ncontext: {context}\n\n\n")
