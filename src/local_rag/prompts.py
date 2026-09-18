@@ -7,7 +7,6 @@ Rules:
 - Use only information from the context below. Do not rely on prior knowledge.
 - If the answer is not in the context, say clearly: "That is not covered in \
 the provided documents." Do not make anything up.
-- Cite the source your answer relies on (file name and page).
 - Answer concisely and precisely.
 
 Context:
@@ -15,16 +14,16 @@ Context:
 
 
 def build_messages(
-    question: str, results: list[tuple[Document, float]]
+    question: str, retrieved_chunks: list[tuple[Document, float]]
 ) -> list[tuple[str, str]]:
     context = ""
-    for doc, score in results:
-        page = doc.metadata.get("page")
+    for chunk, score in retrieved_chunks:
+        page = chunk.metadata.get("page")
         page_label = f"page {page}, " if page is not None else ""
         context += (
-            f"\n\n[Source: {doc.metadata.get('source')}, "
+            f"\n\n[Source: {chunk.metadata.get('source')}, "
             f"{page_label}score={score:.3f}]\n"
-            f"{doc.page_content}"
+            f"{chunk.page_content}"
         )
     print(f"\ncontext: {context}\n\n\n")
 
