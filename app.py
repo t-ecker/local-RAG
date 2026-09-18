@@ -4,6 +4,7 @@ from pathlib import Path
 import streamlit as st
 
 from local_rag.config import Settings
+from local_rag.errors import LocalRagError
 from local_rag.ingest import load_chunks
 from local_rag.query import RagEngine
 from local_rag.store import DocumentStore
@@ -62,9 +63,17 @@ def handle_uploads(files):
     paths = save_uploads(files)
     count = 0
     for path in paths:
-        if not vector_store.is_present(path):
-            vector_store.add_in_batches(chunks=load_chunks(settings, path))
-            count += 1
+        try:
+            filename = Path(path).name
+            if not vector_store.is_present(path):
+                vector_store.add_in_batches(chunks=load_chunks(settings, path))
+                count += 1
+            else:
+                st.toast(
+                    f"File: {filename} already exists in the vector store", icon="⚠️"
+                )
+        except LocalRagError as e:
+            st.toast(f"{e!s}. File: {filename} didnt upload", icon="⚠️")
     st.toast(f"successfully embedded: {count} new file(s)")
 
 
@@ -123,8 +132,11 @@ with st.sidebar:
             type="tertiary",
             help="Removes every embedded chunk from the vector store",
         ):
-            clear_vector_store()
-            st.rerun()
+            try:
+                clear_vector_store()
+                st.rerun()
+            except LocalRagError as e:
+                st.toast(str(e), icon="⚠️")
 
     with st.expander("System"):
         with st.container(gap=None):
@@ -156,37 +168,40 @@ for message in st.session_state.messages:
                 )
 
 if question := st.chat_input("Ask about your documents"):
-    with st.chat_message(name="user", avatar=AVATARS["user"]):
-        st.markdown(question)
+    try:
+        with st.chat_message(name="user", avatar=AVATARS["user"]):
+            st.markdown(question)
 
-    with st.chat_message("assistant", avatar=AVATARS["assistant"]):
-        with st.spinner("thinking...", show_time=True):
-            retrieved_chunks = rag_engine.retrieve(question)
-            chunks_metadata = []
-            for chunk, score in retrieved_chunks:
-                page = chunk.metadata.get("page")
-                chunks_metadata.append(
-                    {
-                        "Source": Path(chunk.metadata["source"]).name,
-                        "Page": str(page)
-                        if page is not None
-                        else "not availiable for this filetype",
-                        "Relevance": score,
-                    }
-                )
-            answer = rag_engine.stream_answer(question, retrieved_chunks)
-            first_token = next((token for token in answer if token), "")
+        with st.chat_message("assistant", avatar=AVATARS["assistant"]):
+            with st.spinner("thinking...", show_time=True):
+                retrieved_chunks = rag_engine.retrieve(question)
+                chunks_metadata = []
+                for chunk, score in retrieved_chunks:
+                    page = chunk.metadata.get("page")
+                    chunks_metadata.append(
+                        {
+                            "Source": Path(chunk.metadata["source"]).name,
+                            "Page": str(page)
+                            if page is not None
+                            else "not available for this file type",
+                            "Relevance": score,
+                        }
+                    )
+                answer = rag_engine.stream_answer(question, retrieved_chunks)
+                first_token = next((token for token in answer if token), "")
 
-        response = st.write_stream(chain([first_token], answer))
+            response = st.write_stream(chain([first_token], answer))
 
-    st.session_state.messages.append({"role": "user", "text": question})
-    st.session_state.messages.append(
-        {
-            "role": "assistant",
-            "text": response,
-            "metadata": chunks_metadata,
-        }
-    )
+        st.session_state.messages.append({"role": "user", "text": question})
+        st.session_state.messages.append(
+            {
+                "role": "assistant",
+                "text": response,
+                "metadata": chunks_metadata,
+            }
+        )
+    except LocalRagError as e:
+        st.toast(str(e), icon="⚠️")
     st.rerun()
 
 if not st.session_state.messages:

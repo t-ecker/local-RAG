@@ -18,14 +18,13 @@ def build_messages(
 ) -> list[tuple[str, str]]:
     context = ""
     for chunk, score in retrieved_chunks:
-        page = chunk.metadata.get("page")
-        page_label = f"page {page}, " if page is not None else ""
+        page = chunk.metadata.get("page") or "not available for this file type"
         context += (
             f"\n\n[Source: {chunk.metadata.get('source')}, "
-            f"{page_label}score={score:.3f}]\n"
+            f"page: {page}, score={score:.3f}]\n"
             f"{chunk.page_content}"
         )
-    print(f"\ncontext: {context}\n\n\n")
+    # print(f"\ncontext: {context}\n\n\n")
 
     return [
         ("system", SYSTEM_PROMPT.format(context=context)),

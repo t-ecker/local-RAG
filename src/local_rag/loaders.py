@@ -3,6 +3,8 @@ from pathlib import Path
 import pypdf
 from langchain_core.documents import Document
 
+from local_rag.errors import DocumentLoadError
+
 
 def pdf_loader(path: str) -> list[Document]:
     reader = pypdf.PdfReader(path)
@@ -25,10 +27,10 @@ def txt_and_md_loader(path: str) -> list[Document]:
 def file_loading_router(path: str) -> list[Document]:
     p = Path(path)
     if not p.is_file():
-        raise FileNotFoundError(f"file not found: {path}")
+        raise DocumentLoadError(f"file not found: {path}")
     suffix = p.suffix.lower()
     if suffix == ".pdf":
         return pdf_loader(path)
     if suffix == ".txt" or suffix == ".md":
         return txt_and_md_loader(path)
-    raise ValueError("filetype not supported (use .pdf .txt or .md)")
+    raise DocumentLoadError("filetype not supported (use .pdf .txt or .md)")
