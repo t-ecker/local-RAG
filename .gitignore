@@ -228,3 +228,4 @@ models/
 
 chroma_db/
 sample_docs/
+uploads/

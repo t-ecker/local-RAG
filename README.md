@@ -6,3 +6,6 @@
 - https://docs.langchain.com/oss/python/langchain/knowledge-base
 - https://docs.langchain.com/oss/python/integrations/vectorstores/chroma
 - https://docs.langchain.com/oss/python/integrations/chat/ollama
+- https://medium.com/@connect.hashblock/streamlit-vs-gradio-why-i-chose-streamlit-for-my-ml-apps-d540b2d758bc
+- https://docs.streamlit.io
+- https://docs.streamlit.io/develop/tutorials/chat-and-llm-apps/build-conversational-apps
