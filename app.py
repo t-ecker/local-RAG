@@ -4,7 +4,7 @@ from pathlib import Path
 import streamlit as st
 
 from local_rag.config import Settings
-from local_rag.errors import LocalRagError
+from local_rag.errors import LocalRagError, NoSelectionError
 from local_rag.ingest import load_chunks
 from local_rag.query import RagEngine
 from local_rag.store import DocumentStore
@@ -77,11 +77,6 @@ def handle_uploads(files):
     st.toast(f"successfully embedded: {count} new file(s)")
 
 
-def clear_vector_store() -> None:
-    vector_store.delete()
-    st.toast("cleared vector store")
-
-
 st.set_page_config(
     page_title="local-RAG",
     page_icon="",
@@ -126,17 +121,54 @@ with st.sidebar:
 
         st.caption("All files stay on this machine")
 
-        if st.button(
-            "Delete all Documents",
-            icon=":material/delete:",
-            type="tertiary",
-            help="Removes every embedded chunk from the vector store",
-        ):
-            try:
-                clear_vector_store()
+    with st.expander("Scope"), st.container(gap=None):
+        sources = vector_store.get_stored_documents()
+        files = [{"name": Path(source).name, "path": source} for source in sources]
+        for file in files:
+            st.session_state.setdefault(f"scope_{file['name']}", True)
+
+        if files:
+            all_selected = all(
+                st.session_state[f"scope_{file['name']}"] for file in files
+            )
+            btn_label = "deselect all" if all_selected else "select all"
+            if st.button(f":gray[{btn_label}]", type="tertiary"):
+                for file in files:
+                    st.session_state[f"scope_{file['name']}"] = not all_selected
                 st.rerun()
-            except LocalRagError as e:
-                st.toast(str(e), icon="⚠️")
+
+            for file in files:
+                pick_col, drop_col = st.columns(
+                    [6, 1], vertical_alignment="center", gap=None
+                )
+                pick_col.checkbox(file["name"], key=f"scope_{file['name']}")
+                if drop_col.button(
+                    ":material/close:",
+                    key=f"drop_{file['name']}",
+                    type="tertiary",
+                    help=f"Remove {file['name']} from the vector store",
+                ):
+                    try:
+                        vector_store.delete_document(file["path"])
+                        st.toast(f"successfully deleted file: {file['name']}")
+                        st.rerun()
+                    except LocalRagError as e:
+                        st.toast(str(e), icon="⚠️")
+
+            if st.button(
+                "Delete all",
+                icon=":material/delete:",
+                type="tertiary",
+                help="Removes every embedded chunk from the vector store",
+            ):
+                try:
+                    vector_store.delete_all()
+                    st.toast("cleared vector store")
+                    st.rerun()
+                except LocalRagError as e:
+                    st.toast(str(e), icon="⚠️")
+        else:
+            st.caption("vector store is empty")
 
     with st.expander("System"):
         with st.container(gap=None):
@@ -174,7 +206,16 @@ if question := st.chat_input("Ask about your documents"):
 
         with st.chat_message("assistant", avatar=AVATARS["assistant"]):
             with st.spinner("thinking...", show_time=True):
-                retrieved_chunks = rag_engine.retrieve(question)
+                selected_documents = []
+                for file in files:
+                    if st.session_state[f"scope_{file['name']}"]:
+                        selected_documents.append(file["path"])
+                if not selected_documents:
+                    raise NoSelectionError(
+                        "There are no files selected for the LLM to work with"
+                    )
+
+                retrieved_chunks = rag_engine.retrieve(question, selected_documents)
                 chunks_metadata = []
                 for chunk, score in retrieved_chunks:
                     page = chunk.metadata.get("page")

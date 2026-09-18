@@ -25,10 +25,12 @@ class RagEngine:
         self._store = document_store
         self._settings = settings
 
-    def retrieve(self, question: str) -> list[tuple[Document, float]]:
+    def retrieve(
+        self, question: str, selected_documents: list[str]
+    ) -> list[tuple[Document, float]]:
         if self._store.get_stored_chunk_amount() == 0:
             raise NoDocumentsError("There are no documents in the vector store yet")
-        return self._store.retrieve_semantic(question)
+        return self._store.retrieve_semantic(question, selected_documents)
 
     def stream_answer(self, question: str, retrieved_chunks) -> Iterator[str]:
         messages = build_messages(question, retrieved_chunks)

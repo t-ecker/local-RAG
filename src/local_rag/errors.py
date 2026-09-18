@@ -10,6 +10,10 @@ class NoDocumentsError(LocalRagError):
     """Vector Store is empty"""
 
 
+class NoSelectionError(LocalRagError):
+    """No Docuemnts are selected to search in"""
+
+
 class DocumentLoadError(LocalRagError):
     """Document couldnt be loaded / embedded"""
 

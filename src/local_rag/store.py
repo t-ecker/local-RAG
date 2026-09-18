@@ -37,12 +37,14 @@ class DocumentStore:
             print(f"embedded: {i + len(batch)}/{len(chunks)}")
 
     def retrieve_semantic(
-        self, query: str, k: int | None = None
+        self, query: str, selected_documents: list[str], k: int | None = None
     ) -> list[tuple[Document, float]]:
         if k is None:
             k = self._settings.top_k
         try:
-            return self._chroma.similarity_search_with_relevance_scores(query, k)
+            return self._chroma.similarity_search_with_relevance_scores(
+                query, k, filter={"source": {"$in": selected_documents}}
+            )
         except (httpx.ConnectError, ConnectionError) as e:
             raise OllamaUnavailableError("Ollama not available") from e
         except ResponseError as e:
@@ -61,7 +63,7 @@ class DocumentStore:
         self._chroma.delete(where={"source": source})
         self.add_in_batches(chunks)
 
-    def delete(self) -> None:
+    def delete_all(self) -> None:
         entries = self._chroma.get()
         ids: list[str] = entries["ids"]
         if ids:
@@ -71,10 +73,17 @@ class DocumentStore:
                 "there are no documents in the vectore store to delete"
             )
 
-    def get_stored_document_amount(self) -> int:
+    def delete_document(self, source: str) -> None:
+        entries = self._chroma.get(where={"source": source})
+        self._chroma.delete(entries["ids"])
+
+    def get_stored_documents(self) -> set:
         data = self._chroma.get(include=["metadatas"])
-        sources = {m["source"] for m in data["metadatas"]}
-        return len(sources)
+        sources: set[str] = {m["source"] for m in data["metadatas"]}
+        return sources
+
+    def get_stored_document_amount(self) -> int:
+        return len(self.get_stored_documents())
 
     def get_stored_chunk_amount(self) -> int:
         return self._chroma._collection.count()
