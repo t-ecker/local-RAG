@@ -1,5 +1,6 @@
 from collections.abc import Iterator
 
+from langchain_core.documents import Document
 from langchain_ollama import ChatOllama
 
 from local_rag.config import Settings
@@ -13,11 +14,14 @@ class RagEngine:
             model=settings.ollama_model,
             temperature=settings.temperature,
             base_url=settings.ollama_base_url,
+            reasoning=settings.reasoning,
         )
         self._store = document_store
 
-    def stream_answer(self, question: str) -> Iterator[str]:
-        results = self._store.retrieve_semantic(question)
-        messages = build_messages(question, results)
+    def retrieve(self, question: str) -> list[tuple[Document, float]]:
+        return self._store.retrieve_semantic(question)
+
+    def stream_answer(self, question: str, retrieved_chunks) -> Iterator[str]:
+        messages = build_messages(question, retrieved_chunks)
         for chunk in self._llm.stream(messages):
             yield chunk.text

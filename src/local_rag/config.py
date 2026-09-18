@@ -12,5 +12,6 @@ class Settings(BaseSettings):
     chunk_overlap: int = 200
     top_k: int = 4
     temperature: float = 0.1
+    reasoning: bool = False
     persist_dir: Path = Path("./chroma_db")
     collection: str = "firstTry"
