@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     ollama_embeddings_model: str
     chunk_size: int = 1000
     chunk_overlap: int = 200
-    top_k: int = 4
+    fallback_top_k: int = 4
     temperature: float = 0.1
     reasoning: bool = False
     persist_dir: Path = Path("./chroma_db")

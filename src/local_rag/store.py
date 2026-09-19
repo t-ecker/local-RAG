@@ -40,7 +40,7 @@ class DocumentStore:
         self, query: str, selected_documents: list[str], k: int | None = None
     ) -> list[tuple[Document, float]]:
         if k is None:
-            k = self._settings.top_k
+            k = self._settings.fallback_top_k
         try:
             return self._chroma.similarity_search_with_relevance_scores(
                 query, k, filter={"source": {"$in": selected_documents}}

@@ -1,0 +1,91 @@
+NORTHWIND ROBOTICS — FLEET FIRMWARE CHANGELOG
+=============================================
+
+This file records notable changes to the Northwind fleet firmware for the Atlas
+AR-200 and Orion OR-500 robots. Firmware is delivered over the air through the
+fleet management console. Entries are listed newest first. Atlas and Orion use
+separate firmware builds from the same source tree; each entry notes which models
+are affected.
+
+For instructions on applying firmware updates, see the operator manual for your
+robot model. For the firmware API, see the Fleet Management API Reference.
+
+
+-------------------------------------------------------------------------------
+Atlas AR-200 — version 4.7.1  (2025-07-14)  [STABLE]
+-------------------------------------------------------------------------------
+- Fixed a defect where error code E310 (lost floor fiducial) could be reported
+  incorrectly after a network reconnection, even when the robot's position was
+  still valid.
+- Improved battery temperature management to reduce the frequency of error code
+  E101 in warm environments.
+- Reduced the average firmware update time from about 18 minutes to about 12
+  minutes.
+- Security: rotated the internal certificate used for console communication.
+
+This is the current stable Atlas release and is recommended for all AR-200 fleets.
+
+
+-------------------------------------------------------------------------------
+Orion OR-500 — version 2.9.3  (2025-06-30)  [STABLE]
+-------------------------------------------------------------------------------
+- Added error code E630 (load unstable during transit) to detect shifting pallets
+  before they become a hazard.
+- Improved lift-mechanism control to reduce wear, extending the recommended lift
+  service interval guidance.
+- Fixed a defect where the OR-500 could occasionally attempt to use an Atlas
+  AR-200 charging dock; the console now enforces dock compatibility.
+
+This is the current stable Orion release and is recommended for all OR-500 fleets.
+
+
+-------------------------------------------------------------------------------
+Atlas AR-200 — version 4.6.0  (2025-04-02)
+-------------------------------------------------------------------------------
+- Added support for the goods-to-person picking workflow introduced in console
+  version 3.3.
+- Increased the maximum coordinated fleet size handled by a single console from
+  80 to 100 robots of mixed models.
+- Known issue: on this version, disabling automatic overnight updates in the
+  console did not always take effect. Fixed in 4.7.1.
+
+
+-------------------------------------------------------------------------------
+Orion OR-500 — version 2.8.0  (2025-03-15)
+-------------------------------------------------------------------------------
+- Added error codes E610 (lift mechanism jammed) and E620 (pallet not detected).
+- Widened the default aisle assignment for the OR-500 to 2.4 metres to reflect its
+  turning radius.
+- Performance: reduced pallet pick-up cycle time by approximately 8 percent.
+
+
+-------------------------------------------------------------------------------
+Atlas AR-200 — version 4.5.2  (2025-01-20)  [SUPERSEDED]
+-------------------------------------------------------------------------------
+- Fixed a rare drive motor overcurrent condition that could trigger error code
+  E502 during sharp turns at full speed.
+- This version is superseded. Northwind recommends upgrading to 4.7.1. Version
+  4.5.2 will no longer receive security updates after 31 December 2025.
+
+
+-------------------------------------------------------------------------------
+Compatibility notes
+-------------------------------------------------------------------------------
+- Atlas firmware (the 4.x series) must never be installed on an Orion OR-500, and
+  Orion firmware (the 2.x series) must never be installed on an Atlas AR-200. The
+  fleet management console prevents cross-model installation automatically.
+- All firmware from Atlas 4.5.0 and Orion 2.8.0 onward requires fleet management
+  console version 3.2 or later. Older consoles must be upgraded first.
+- Deprecated API keys with the prefix nw_key_ are unrelated to firmware but are
+  mentioned here because several customers have confused firmware version support
+  windows with API key deprecation. These are tracked separately; see the API
+  reference for key deprecation dates.
+
+
+-------------------------------------------------------------------------------
+Support
+-------------------------------------------------------------------------------
+Firmware problems should be reported to robotics-support@northwind-example.com
+with the robot serial number and the firmware version currently installed. The
+installed version can be read from the robot health endpoint in the Fleet API or
+from the Account section of the fleet management console.

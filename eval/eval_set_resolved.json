@@ -1,0 +1,322 @@
+[
+  {
+    "question": "What is the maximum payload of the Atlas AR-200?",
+    "expected_source": "atlas-ar200-manual.pdf",
+    "expected_page": 1,
+    "answer_text": "a maximum payload of 45 kilograms",
+    "reference_answer": "45 kilograms.",
+    "category": "factual",
+    "answer_char_start": 581,
+    "answer_char_end": 614
+  },
+  {
+    "question": "How long does a full charge of the Atlas AR-200 take?",
+    "expected_source": "atlas-ar200-manual.pdf",
+    "expected_page": 1,
+    "answer_text": "A full charge takes approximately 90 minutes",
+    "reference_answer": "About 90 minutes.",
+    "category": "factual",
+    "answer_char_start": 961,
+    "answer_char_end": 1005
+  },
+  {
+    "question": "At what battery level does the Atlas AR-200 return to its dock?",
+    "expected_source": "atlas-ar200-manual.pdf",
+    "expected_page": 2,
+    "answer_text": "returns to its charging dock automatically when its battery level falls below 15 percent",
+    "reference_answer": "Below 15 percent.",
+    "category": "factual",
+    "answer_char_start": 46,
+    "answer_char_end": 134
+  },
+  {
+    "question": "What does error code E415 mean on the Atlas AR-200?",
+    "expected_source": "atlas-ar200-manual.pdf",
+    "expected_page": 3,
+    "answer_text": "Payload exceeds limit",
+    "reference_answer": "The payload exceeds the limit; remove excess load below 45 kg.",
+    "category": "exact-identifier",
+    "answer_char_start": 506,
+    "answer_char_end": 527
+  },
+  {
+    "question": "What is the replacement part number for the Atlas AR-200 battery?",
+    "expected_source": "atlas-ar200-manual.pdf",
+    "expected_page": 2,
+    "answer_text": "NW-BAT-48-20",
+    "reference_answer": "NW-BAT-48-20.",
+    "category": "exact-identifier",
+    "answer_char_start": 852,
+    "answer_char_end": 864
+  },
+  {
+    "question": "How far ahead does the Atlas AR-200 protective field extend at full speed?",
+    "expected_source": "atlas-ar200-manual.pdf",
+    "expected_page": 2,
+    "answer_text": "protective field\nextends 1.2 metres ahead of the robot at full speed",
+    "reference_answer": "1.2 metres.",
+    "category": "factual",
+    "answer_char_start": 1010,
+    "answer_char_end": 1078
+  },
+  {
+    "question": "How heavy a load can the Orion OR-500 carry?",
+    "expected_source": "orion-or500-manual.pdf",
+    "expected_page": 1,
+    "answer_text": "a maximum payload of 500 kilograms",
+    "reference_answer": "500 kilograms.",
+    "category": "cross-document",
+    "answer_char_start": 597,
+    "answer_char_end": 631
+  },
+  {
+    "question": "What is the minimum aisle width required for the Orion OR-500?",
+    "expected_source": "orion-or500-manual.pdf",
+    "expected_page": 5,
+    "answer_text": "Aisles used by the OR-500 must be at\nleast 2.4 metres wide",
+    "reference_answer": "At least 2.4 metres.",
+    "category": "factual",
+    "answer_char_start": 295,
+    "answer_char_end": 353
+  },
+  {
+    "question": "What is the battery part number for the Orion OR-500?",
+    "expected_source": "orion-or500-manual.pdf",
+    "expected_page": 2,
+    "answer_text": "NW-BAT-48-60",
+    "reference_answer": "NW-BAT-48-60.",
+    "category": "exact-identifier",
+    "answer_char_start": 487,
+    "answer_char_end": 499
+  },
+  {
+    "question": "How many charge cycles is the Orion OR-500 battery rated for?",
+    "expected_source": "orion-or500-manual.pdf",
+    "expected_page": 2,
+    "answer_text": "rated for 3,000 full charge\ncycles",
+    "reference_answer": "3,000 full charge cycles.",
+    "category": "cross-document",
+    "answer_char_start": 355,
+    "answer_char_end": 389
+  },
+  {
+    "question": "What does error code E620 mean on the Orion OR-500?",
+    "expected_source": "orion-or500-manual.pdf",
+    "expected_page": 3,
+    "answer_text": "Pallet not detected",
+    "reference_answer": "The pallet was not detected; reposition the robot square to the pallet.",
+    "category": "exact-identifier",
+    "answer_char_start": 531,
+    "answer_char_end": 550
+  },
+  {
+    "question": "How long is the chassis warranty on the Orion OR-500?",
+    "expected_source": "warranty-support-policy.pdf",
+    "expected_page": 1,
+    "answer_text": "for the Orion OR-500 it is\nthree years",
+    "reference_answer": "Three years.",
+    "category": "cross-document",
+    "answer_char_start": 472,
+    "answer_char_end": 510
+  },
+  {
+    "question": "Which parts are considered consumables and not covered by the warranty?",
+    "expected_source": "warranty-support-policy.pdf",
+    "expected_page": 2,
+    "answer_text": "Consumables include drive wheels, LiDAR sensor windows, and charging\ncontacts",
+    "reference_answer": "Drive wheels, LiDAR sensor windows, and charging contacts.",
+    "category": "paraphrase",
+    "answer_char_start": 104,
+    "answer_char_end": 181
+  },
+  {
+    "question": "Under what conditions does the warranty become void?",
+    "expected_source": "warranty-support-policy.pdf",
+    "expected_page": 2,
+    "answer_text": "The warranty is void if the robot has been operated outside its rated\ntemperature range",
+    "reference_answer": "If operated outside its rated temperature range, if safety scanners are disabled, if unauthorised firmware is installed, or if serviced by a non-certified technician.",
+    "category": "paraphrase",
+    "answer_char_start": 280,
+    "answer_char_end": 367
+  },
+  {
+    "question": "What phone number do I call to make a warranty claim?",
+    "expected_source": "warranty-support-policy.pdf",
+    "expected_page": 2,
+    "answer_text": "+1-555-0100",
+    "reference_answer": "+1-555-0100.",
+    "category": "exact-identifier",
+    "answer_char_start": 786,
+    "answer_char_end": 797
+  },
+  {
+    "question": "Which support tier is required to be eligible for a loan robot?",
+    "expected_source": "warranty-support-policy.pdf",
+    "expected_page": 3,
+    "answer_text": "Customers on the Priority or Premium support tier are eligible for a loan robot",
+    "reference_answer": "Priority or Premium tier.",
+    "category": "paraphrase",
+    "answer_char_start": 679,
+    "answer_char_end": 758
+  },
+  {
+    "question": "What response target does the Premium support tier offer?",
+    "expected_source": "warranty-support-policy.pdf",
+    "expected_page": 3,
+    "answer_text": "24-hour\ncoverage every day of the year with a two-hour response target",
+    "reference_answer": "24-hour coverage with a two-hour response target.",
+    "category": "factual",
+    "answer_char_start": 314,
+    "answer_char_end": 384
+  },
+  {
+    "question": "What is the base URL of the Fleet Management API?",
+    "expected_source": "fleet-api-reference.md",
+    "expected_page": null,
+    "answer_text": "https://api.northwind-example.com/v3",
+    "reference_answer": "https://api.northwind-example.com/v3",
+    "category": "exact-identifier",
+    "answer_char_start": 379,
+    "answer_char_end": 415
+  },
+  {
+    "question": "What prefix do production API keys use?",
+    "expected_source": "fleet-api-reference.md",
+    "expected_page": null,
+    "answer_text": "begins with the prefix `nw_live_` for production",
+    "reference_answer": "nw_live_",
+    "category": "exact-identifier",
+    "answer_char_start": 845,
+    "answer_char_end": 893
+  },
+  {
+    "question": "What is the rate limit of the Fleet API?",
+    "expected_source": "fleet-api-reference.md",
+    "expected_page": null,
+    "answer_text": "a rate limit of 120 requests per minute per API key",
+    "reference_answer": "120 requests per minute per API key.",
+    "category": "factual",
+    "answer_char_start": 1536,
+    "answer_char_end": 1587
+  },
+  {
+    "question": "What status code is returned when the rate limit is exceeded?",
+    "expected_source": "fleet-api-reference.md",
+    "expected_page": null,
+    "answer_text": "the API responds with status 429",
+    "reference_answer": "Status 429.",
+    "category": "exact-identifier",
+    "answer_char_start": 1841,
+    "answer_char_end": 1873
+  },
+  {
+    "question": "How do I tell the API to assign a task only to a pallet-capable robot?",
+    "expected_source": "fleet-api-reference.md",
+    "expected_page": null,
+    "answer_text": "a pallet task should set\n`\"model\": \"orion-or500\"`",
+    "reference_answer": "Set \"model\": \"orion-or500\" in the task body.",
+    "category": "paraphrase",
+    "answer_char_start": 3398,
+    "answer_char_end": 3447
+  },
+  {
+    "question": "How many tasks can a single batch-create request contain?",
+    "expected_source": "fleet-api-reference.md",
+    "expected_page": null,
+    "answer_text": "creates up to 50 tasks in a single request",
+    "reference_answer": "Up to 50 tasks.",
+    "category": "factual",
+    "answer_char_start": 4409,
+    "answer_char_end": 4451
+  },
+  {
+    "question": "Which header carries the webhook signature?",
+    "expected_source": "fleet-api-reference.md",
+    "expected_page": null,
+    "answer_text": "`X-Northwind-Signature` header",
+    "reference_answer": "The X-Northwind-Signature header.",
+    "category": "exact-identifier",
+    "answer_char_start": 5699,
+    "answer_char_end": 5729
+  },
+  {
+    "question": "What was fixed in Atlas firmware version 4.7.1 regarding error code E310?",
+    "expected_source": "firmware-changelog.txt",
+    "expected_page": null,
+    "answer_text": "error code E310 (lost floor fiducial) could be reported\nincorrectly after a network reconnection",
+    "reference_answer": "E310 could be reported incorrectly after a network reconnection even when the position was still valid.",
+    "category": "cross-document",
+    "answer_char_start": 821,
+    "answer_char_end": 919
+  },
+  {
+    "question": "Which firmware version first added error code E630?",
+    "expected_source": "firmware-changelog.txt",
+    "expected_page": null,
+    "answer_text": "Added error code E630 (load unstable during transit)",
+    "reference_answer": "Orion OR-500 version 2.9.3.",
+    "category": "cross-document",
+    "answer_char_start": 1546,
+    "answer_char_end": 1598
+  },
+  {
+    "question": "What console version is required for Atlas 4.5.0 and later firmware?",
+    "expected_source": "firmware-changelog.txt",
+    "expected_page": null,
+    "answer_text": "requires fleet management\nconsole version 3.2 or later",
+    "reference_answer": "Fleet management console version 3.2 or later.",
+    "category": "factual",
+    "answer_char_start": 3974,
+    "answer_char_end": 4030
+  },
+  {
+    "question": "When will Atlas version 4.5.2 stop receiving security updates?",
+    "expected_source": "firmware-changelog.txt",
+    "expected_page": null,
+    "answer_text": "will no longer receive security updates after 31 December 2025",
+    "reference_answer": "After 31 December 2025.",
+    "category": "factual",
+    "answer_char_start": 3433,
+    "answer_char_end": 3495
+  },
+  {
+    "question": "What is the water resistance rating of the Northwind SwiftSort conveyor?",
+    "expected_source": null,
+    "expected_page": null,
+    "answer_text": null,
+    "reference_answer": "Not answerable — no SwiftSort conveyor is described anywhere in the corpus.",
+    "category": "unanswerable",
+    "answer_char_start": null,
+    "answer_char_end": null
+  },
+  {
+    "question": "How much does a Northwind Premium support subscription cost per year?",
+    "expected_source": null,
+    "expected_page": null,
+    "answer_text": null,
+    "reference_answer": "Not answerable — pricing is not stated in any document.",
+    "category": "unanswerable",
+    "answer_char_start": null,
+    "answer_char_end": null
+  },
+  {
+    "question": "What is the top speed of the Atlas AR-300?",
+    "expected_source": null,
+    "expected_page": null,
+    "answer_text": null,
+    "reference_answer": "Not answerable — there is no AR-300 model; the corpus covers the AR-200 and OR-500.",
+    "category": "unanswerable",
+    "answer_char_start": null,
+    "answer_char_end": null
+  },
+  {
+    "question": "Which robot model should I use to move a 200 kilogram pallet, and why?",
+    "expected_source": "fleet-api-reference.md",
+    "expected_page": null,
+    "answer_text": "the Atlas AR-200 cannot carry pallets",
+    "reference_answer": "The Orion OR-500, because the Atlas AR-200 cannot carry pallets and its payload limit is 45 kg.",
+    "category": "reasoning",
+    "answer_char_start": 3456,
+    "answer_char_end": 3493
+  }
+]
