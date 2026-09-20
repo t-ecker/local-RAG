@@ -8,7 +8,7 @@ from local_rag.ingest import load_chunks
 from local_rag.query import RagEngine
 from local_rag.store import DocumentStore
 
-TOP_K = 4
+TOP_K_LIST = [1, 3, 5]
 
 
 def is_chunk_correct(test, chunk: Document):
@@ -29,24 +29,49 @@ def is_chunk_correct(test, chunk: Document):
     return False
 
 
-def get_recall_at_k(test, retrieved_chunks):
+def check_chunks(test, retrieved_chunks):
     for chunk, _ in retrieved_chunks:
         if is_chunk_correct(test, chunk):
             return 1.0
-    print(f"failed at test: {test['question']}")
-    print(
-        f"  expected: {test['expected_source']} p={test['expected_page']} "
-        f"chars={test['answer_char_start']}-{test['answer_char_end']}"
-    )
-    for chunk, score in retrieved_chunks:
-        metadata = chunk.metadata
-        start = metadata["start_index"]
-        end = start + len(chunk.page_content)
-        print(
-            f"  got:      {Path(metadata['source']).name} "
-            f"p={metadata.get('page')} chars={start}-{end} score={score:.3f}"
-        )
+    # print(f"failed at test: {test['question']}")
+    # print(
+    #     f"  expected: {test['expected_source']} p={test['expected_page']} "
+    #     f"chars={test['answer_char_start']}-{test['answer_char_end']}"
+    # )
+    # for chunk, score in retrieved_chunks:
+    #     metadata = chunk.metadata
+    #     start = metadata["start_index"]
+    #     end = start + len(chunk.page_content)
+    #     print(
+    #         f"  got:      {Path(metadata['source']).name} "
+    #         f"p={metadata.get('page')} chars={start}-{end} score={score:.3f}"
+    #     )
     return 0.0
+
+
+def get_recall_at_k_score(data_set, corpus_paths, rag_engine):
+    hits: dict[int, float] = dict.fromkeys(TOP_K_LIST, 0.0)
+    amount_valid_tests: int = 0
+    for test in data_set:
+        if test["expected_source"] is None:
+            continue
+        amount_valid_tests += 1
+        retrieved_chunks = rag_engine.retrieve(
+            test["question"],
+            corpus_paths,
+            max(TOP_K_LIST),
+        )
+        for top_k in TOP_K_LIST:
+            hits[top_k] += check_chunks(test, retrieved_chunks[:top_k])
+    scores = []
+    for top_k in TOP_K_LIST:
+        scores.append(
+            {
+                "k-value": top_k,
+                "recall@k": hits[top_k] / amount_valid_tests,
+            }
+        )
+    return scores
 
 
 def main():
@@ -64,26 +89,9 @@ def main():
     with open("./eval/eval_set_resolved.json") as file:
         data_set = json.load(file)
 
-    recall_at_k_score: float = 0.0
-    amount_valid_tests: int = 0
-
-    for test in data_set:
-        retrieved_chunks = rag_engine.retrieve(
-            test["question"],
-            corpus_paths,
-            TOP_K,
-        )
-        if test["expected_source"] is None:
-            continue
-        amount_valid_tests += 1
-        recall_at_k_score += get_recall_at_k(test, retrieved_chunks)
-
-    recall_at_k_score /= amount_valid_tests
-    # recall_at_k_score = 1 - recall_at_k_score
-
-    print(
-        f"Recall@{TOP_K}: {recall_at_k_score:.3f}  (on {amount_valid_tests} answerable questions)"
-    )
+    recall_at_top_k_scores = get_recall_at_k_score(data_set, corpus_paths, rag_engine)
+    for row in recall_at_top_k_scores:
+        print(f"Recall@{row['k-value']}: {row['recall@k']:.3f}")
 
 
 if __name__ == "__main__":
