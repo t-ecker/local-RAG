@@ -9,3 +9,4 @@
 - https://medium.com/@connect.hashblock/streamlit-vs-gradio-why-i-chose-streamlit-for-my-ml-apps-d540b2d758bc
 - https://docs.streamlit.io
 - https://docs.streamlit.io/develop/tutorials/chat-and-llm-apps/build-conversational-apps
+- https://medium.com/@rajnish_khatri/retrieval-metrics-tutorial-recall-k-and-mrr-explained-d2f12afb9c89
