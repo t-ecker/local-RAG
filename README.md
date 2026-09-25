@@ -10,3 +10,6 @@
 - https://docs.streamlit.io
 - https://docs.streamlit.io/develop/tutorials/chat-and-llm-apps/build-conversational-apps
 - https://medium.com/@rajnish_khatri/retrieval-metrics-tutorial-recall-k-and-mrr-explained-d2f12afb9c89
+- https://medium.com/@alexrodriguesj/hybrid-search-rag-revolutionizing-information-retrieval-9905d3437cdd
+
+- https://github.com/xhluca/bm25s

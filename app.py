@@ -16,13 +16,19 @@ AVATARS = {
     "assistant": ":material/find_in_page:",
 }
 
-SOURCE_COLUMNS = {
-    "Source": st.column_config.TextColumn("Source"),
-    "Page": st.column_config.TextColumn("Page"),
-    "Relevance": st.column_config.ProgressColumn(
-        "Relevance", min_value=0.0, max_value=1.0, format="%.2f"
-    ),
-}
+
+def source_columns(mode: str) -> dict:
+    if mode == "semantic":
+        score = st.column_config.ProgressColumn(
+            "Relevance", min_value=0.0, max_value=1.0, format="%.2f"
+        )
+    if mode == "lexical":
+        score = st.column_config.NumberColumn("Score", format="%.2f")
+    return {
+        "Source": st.column_config.TextColumn("Source"),
+        "Page": st.column_config.TextColumn("Page"),
+        "Relevance": score,
+    }
 
 
 @st.cache_resource
@@ -121,6 +127,15 @@ with st.sidebar:
 
         st.caption("All files stay on this machine")
 
+    with st.expander("Mode"):
+        st.segmented_control(
+            "Retrieval mode",
+            ["semantic", "lexical"],
+            default="semantic",
+            label_visibility="collapsed",
+            key="retrieval_mode",
+        )
+
     with st.expander("Scope"), st.container(gap=None):
         sources = vector_store.get_stored_documents()
         files = [{"name": Path(source).name, "path": source} for source in sources]
@@ -196,7 +211,7 @@ for message in st.session_state.messages:
                 st.dataframe(
                     message["metadata"],
                     hide_index=True,
-                    column_config=SOURCE_COLUMNS,
+                    column_config=source_columns(message["mode"]),
                 )
 
 if question := st.chat_input("Ask about your documents"):
@@ -210,12 +225,12 @@ if question := st.chat_input("Ask about your documents"):
                 for file in files:
                     if st.session_state[f"scope_{file['name']}"]:
                         selected_documents.append(file["path"])
-                if not selected_documents:
-                    raise NoSelectionError(
-                        "There are no files selected for the LLM to work with"
-                    )
+                if st.session_state.retrieval_mode is None:
+                    raise NoSelectionError("no retrival mode selected")
 
-                retrieved_chunks = rag_engine.retrieve(question, selected_documents)
+                retrieved_chunks = rag_engine.retrieve(
+                    question, selected_documents, st.session_state.retrieval_mode
+                )
                 chunks_metadata = []
                 for chunk, score in retrieved_chunks:
                     page = chunk.metadata.get("page")
@@ -239,6 +254,7 @@ if question := st.chat_input("Ask about your documents"):
                 "role": "assistant",
                 "text": response,
                 "metadata": chunks_metadata,
+                "mode": st.session_state.retrieval_mode,
             }
         )
     except LocalRagError as e:

@@ -11,7 +11,7 @@ class NoDocumentsError(LocalRagError):
 
 
 class NoSelectionError(LocalRagError):
-    """No Docuemnts are selected to search in"""
+    """No Docuemnts or Mode selected to search in / with"""
 
 
 class DocumentLoadError(LocalRagError):
@@ -20,3 +20,7 @@ class DocumentLoadError(LocalRagError):
 
 class NoExtractableTextError(LocalRagError):
     """Nothing could be extracted out of a document"""
+
+
+class InvalidRetrieveModeError(LocalRagError):
+    """Retrieve Mode is unknown"""

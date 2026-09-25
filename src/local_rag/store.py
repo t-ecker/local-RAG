@@ -37,10 +37,8 @@ class DocumentStore:
             print(f"embedded: {i + len(batch)}/{len(chunks)}")
 
     def retrieve_semantic(
-        self, query: str, selected_documents: list[str], k: int | None = None
+        self, query: str, selected_documents: list[str], k: int
     ) -> list[tuple[Document, float]]:
-        if k is None:
-            k = self._settings.fallback_top_k
         try:
             return self._chroma.similarity_search_with_relevance_scores(
                 query, k, filter={"source": {"$in": selected_documents}}
@@ -87,3 +85,17 @@ class DocumentStore:
 
     def get_stored_chunk_amount(self) -> int:
         return self._chroma._collection.count()
+
+    def get_documents(self, sources: list[str]) -> list[Document]:
+        srcs: list[str | float] = list(sources)
+        data = self._chroma.get(where={"source": {"$in": srcs}})
+        chunks = []
+        for i in range(len(data["ids"])):
+            chunks.append(
+                Document(
+                    page_content=data["documents"][i],
+                    metadata=data["metadatas"][i],
+                    id=data["ids"][i],
+                )
+            )
+        return chunks

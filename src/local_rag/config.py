@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     chunk_size: int = 1000
     chunk_overlap: int = 200
     fallback_top_k: int = 4
+    corpus_language: str = "english"
     temperature: float = 0.1
     reasoning: bool = False
     persist_dir: Path = Path("./chroma_db")
