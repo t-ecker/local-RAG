@@ -7,6 +7,7 @@ from local_rag.config import Settings
 from local_rag.errors import LocalRagError, NoSelectionError
 from local_rag.ingest import load_chunks
 from local_rag.query import RagEngine
+from local_rag.retrievers import RETRIEVERS
 from local_rag.store import DocumentStore
 
 UPLOAD_DIR = "./uploads"
@@ -130,7 +131,7 @@ with st.sidebar:
     with st.expander("Mode"):
         st.segmented_control(
             "Retrieval mode",
-            ["semantic", "lexical"],
+            list(RETRIEVERS),
             default="semantic",
             label_visibility="collapsed",
             key="retrieval_mode",
