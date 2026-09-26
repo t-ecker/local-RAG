@@ -23,7 +23,7 @@ def source_columns(mode: str) -> dict:
         score = st.column_config.ProgressColumn(
             "Relevance", min_value=0.0, max_value=1.0, format="%.2f"
         )
-    if mode == "lexical":
+    if mode == "lexical" or mode == "hybrid":
         score = st.column_config.NumberColumn("Score", format="%.2f")
     return {
         "Source": st.column_config.TextColumn("Source"),
@@ -132,7 +132,7 @@ with st.sidebar:
         st.segmented_control(
             "Retrieval mode",
             list(RETRIEVERS),
-            default="semantic",
+            default="hybrid",
             label_visibility="collapsed",
             key="retrieval_mode",
         )

@@ -1,3 +1,5 @@
+import operator
+
 import bm25s
 import Stemmer  # ty: ignore[unresolved-import]
 from langchain_core.documents import Document
@@ -42,7 +44,39 @@ def retrieve_lexical(
     return results
 
 
+def retrieve_hybrid(
+    store: DocumentStore,
+    settings: Settings,
+    question: str,
+    selected_documents: list[str],
+    k: int,
+) -> list[tuple[Document, float]]:
+    retrieved_chunks: list[list[Document]] = []
+
+    results_semantic = retrieve_semantic(
+        store, settings, question, selected_documents, k * 2
+    )
+    results_lexical = retrieve_lexical(
+        store, settings, question, selected_documents, k * 2
+    )
+    retrieved_chunks.append([chunk for chunk, score in results_semantic])
+    retrieved_chunks.append([chunk for chunk, score in results_lexical])
+
+    scores: dict[str, float] = {}
+    all_chunks = {}
+
+    for chunk_list in retrieved_chunks:
+        for i, chunk in enumerate(chunk_list):
+            assert chunk.id is not None
+            scores[chunk.id] = scores.get(chunk.id, 0.0) + 1 / (60 + i + 1)
+            all_chunks[chunk.id] = chunk
+
+    top_k = sorted(scores.items(), key=operator.itemgetter(1), reverse=True)[:k]
+    return [(all_chunks[id], score) for id, score in top_k]
+
+
 RETRIEVERS = {
     "semantic": retrieve_semantic,
     "lexical": retrieve_lexical,
+    "hybrid": retrieve_hybrid,
 }
