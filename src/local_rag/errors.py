@@ -2,8 +2,16 @@ class LocalRagError(Exception):
     """base class for all expected errors"""
 
 
-class OllamaUnavailableError(LocalRagError):
-    """Ollama isnt available"""
+class ProviderError(LocalRagError):
+    """Model provider failed"""
+
+
+class ProviderUnavailableError(ProviderError):
+    """Model provider isnt reachable"""
+
+
+class ModelNotFoundError(ProviderError):
+    """Requested model doesnt exist at the provider"""
 
 
 class NoDocumentsError(LocalRagError):

@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -15,7 +16,10 @@ class Settings(BaseSettings):
     temperature: float = 0.1
     reasoning: bool = False
     persist_dir: Path = Path("./chroma_db")
-    collection: str = "firstTry"
     reranker_model: str = "cross-encoder/ms-marco-MiniLM-L6-v2"
     rerank_pool_size: int = 20
     hybrid_fetch_pool_size: int = 10
+
+    @property
+    def collection_name(self) -> str:
+        return re.sub(r"[^a-zA-Z0-9._-]", "-", self.ollama_embeddings_model)

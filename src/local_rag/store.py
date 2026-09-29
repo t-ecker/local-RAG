@@ -1,20 +1,17 @@
-import httpx
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from langchain_ollama import OllamaEmbeddings
-from ollama import ResponseError
+from langchain_core.embeddings import Embeddings
 
 from local_rag.config import Settings
-from local_rag.errors import NoDocumentsError, OllamaUnavailableError
+from local_rag.errors import NoDocumentsError
+from local_rag.providers import get_embeddings, provider_errors
 
 
 class DocumentStore:
     def __init__(self, settings: Settings) -> None:
-        self._embeddings = OllamaEmbeddings(
-            model=settings.ollama_embeddings_model, base_url=settings.ollama_base_url
-        )
+        self._embeddings: Embeddings = get_embeddings(settings)
         self._chroma = Chroma(
-            collection_name=settings.collection,
+            collection_name=settings.collection_name,
             embedding_function=self._embeddings,
             persist_directory=str(settings.persist_dir),
         )
@@ -23,35 +20,17 @@ class DocumentStore:
     def add_in_batches(self, chunks: list[Document], batch_size: int = 100) -> None:
         for i in range(0, len(chunks), batch_size):
             batch = chunks[i : i + batch_size]
-            try:
+            with provider_errors(self._settings.ollama_embeddings_model):
                 self._chroma.add_documents(documents=batch)
-            except (httpx.ConnectError, ConnectionError) as e:
-                raise OllamaUnavailableError("Ollama not available") from e
-            except ResponseError as e:
-                if e.status_code == 404:
-                    raise OllamaUnavailableError(
-                        "Embedding-Model not available. Did you pull "
-                        f"{self._settings.ollama_embeddings_model}?"
-                    ) from e
-                raise
             print(f"embedded: {i + len(batch)}/{len(chunks)}")
 
     def retrieve_semantic(
         self, query: str, selected_documents: list[str], k: int
     ) -> list[tuple[Document, float]]:
-        try:
+        with provider_errors(self._settings.ollama_embeddings_model):
             return self._chroma.similarity_search_with_relevance_scores(
                 query, k, filter={"source": {"$in": selected_documents}}
             )
-        except (httpx.ConnectError, ConnectionError) as e:
-            raise OllamaUnavailableError("Ollama not available") from e
-        except ResponseError as e:
-            if e.status_code == 404:
-                raise OllamaUnavailableError(
-                    "Embedding-Model not available. Did you pull "
-                    f"{self._settings.ollama_embeddings_model}?"
-                ) from e
-            raise
 
     def is_present(self, source: str) -> bool:
         return bool(self._chroma.get(where={"source": source}, limit=1)["ids"])

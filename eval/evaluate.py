@@ -77,7 +77,9 @@ def print_table(results: dict[str, list[dict]]) -> None:
 
 def main():
     settings_base = Settings()
-    settings_updated = settings_base.model_copy(update={"collection": "eval"})
+    settings_updated = settings_base.model_copy(
+        update={"persist_dir": Path("./eval/chroma_db")}
+    )
     vector_store = DocumentStore(settings_updated)
 
     corpus_paths = [str(path) for path in Path("./eval/corpus/").iterdir()]
