@@ -1,4 +1,5 @@
 import json
+import sys
 from functools import partial
 from pathlib import Path
 
@@ -6,11 +7,18 @@ import pandas as pd
 from langchain_core.documents import Document
 
 from local_rag.config import Settings
+from local_rag.errors import LocalRagError
 from local_rag.ingest import load_chunks
+from local_rag.loaders import LOADERS
 from local_rag.retrievers import RETRIEVERS
 from local_rag.store import DocumentStore
 
 TOP_K_LIST = [1, 3, 5]
+
+EVAL_DIR = Path("./eval")
+CORPUS_DIR = EVAL_DIR / "corpus"
+DATASET_PATH = EVAL_DIR / "eval_set_resolved.json"
+PERSIST_DIR = EVAL_DIR / "chroma_db"
 
 
 def is_chunk_correct(test, chunk: Document):
@@ -75,35 +83,54 @@ def print_table(results: dict[str, list[dict]]) -> None:
     print(table.to_string(float_format="%.3f"))
 
 
-def main():
-    settings_base = Settings()
-    settings_updated = settings_base.model_copy(
-        update={"persist_dir": Path("./eval/chroma_db")}
-    )
-    store = DocumentStore(settings_updated)
+def index_corpus(
+    store: DocumentStore, settings: Settings, corpus_paths: list[str]
+) -> None:
+    if store.count_chunks() > 0:
+        store.delete_all()
+    for path in corpus_paths:
+        store.add_chunks(load_chunks(settings, path))
 
-    corpus_paths = [str(path) for path in Path("./eval/corpus/").iterdir()]
 
-    if store.count_chunks() == 0:
-        for path in corpus_paths:
-            store.add_chunks(load_chunks(settings_updated, str(path)))
+def load_dataset() -> list[dict]:
+    with open(DATASET_PATH) as file:
+        return json.load(file)
 
-    with open("./eval/eval_set_resolved.json") as file:
-        data_set = json.load(file)
 
+def evaluate_all_modes(
+    store: DocumentStore,
+    settings: Settings,
+    data_set: list[dict],
+    corpus_paths: list[str],
+) -> dict[str, list[dict]]:
     results = {}
     for mode, retriever in RETRIEVERS.items():
         retrieve_fn = partial(
             retriever,
             store,
-            settings_updated,
+            settings,
             selected_sources=corpus_paths,
             k=max(TOP_K_LIST),
         )
         results[mode] = evaluate_retrieval(data_set, retrieve_fn)
+    return results
 
+
+def main():
+    settings_base = Settings()
+    settings_updated = settings_base.model_copy(update={"persist_dir": PERSIST_DIR})
+    store = DocumentStore(settings_updated)
+    corpus_paths = [
+        str(path) for path in CORPUS_DIR.iterdir() if path.suffix.lower() in LOADERS
+    ]
+
+    index_corpus(store, settings_updated, corpus_paths)
+    results = evaluate_all_modes(store, settings_updated, load_dataset(), corpus_paths)
     print_table(results)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except LocalRagError as e:
+        sys.exit(f"eval failed: {e}")
