@@ -35,8 +35,7 @@ class DocumentStore:
         return bool(self._chroma.get(where={"source": source}, limit=1)["ids"])
 
     def delete_all(self) -> None:
-        entries = self._chroma.get()
-        ids: list[str] = entries["ids"]
+        ids = self._chroma.get()["ids"]
         if ids:
             self._chroma.delete(ids)
         else:
@@ -45,8 +44,9 @@ class DocumentStore:
             )
 
     def delete_source(self, source: str) -> None:
-        entries = self._chroma.get(where={"source": source})
-        self._chroma.delete(entries["ids"])
+        ids = self._chroma.get(where={"source": source})["ids"]
+        if ids:
+            self._chroma.delete(ids)
 
     def list_sources(self) -> set[str]:
         data = self._chroma.get(include=["metadatas"])

@@ -173,7 +173,7 @@ def render_retrieval_mode() -> str | None:
 
 def render_scope(store: DocumentStore) -> list[str]:
     with st.expander("Scope"), st.container(gap=None):
-        sources = store.list_sources()
+        sources = sorted(store.list_sources())
         files = [{"name": Path(source).name, "path": source} for source in sources]
         for file in files:
             st.session_state.setdefault(f"scope_{file['name']}", True)
