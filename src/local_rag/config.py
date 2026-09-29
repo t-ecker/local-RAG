@@ -17,3 +17,5 @@ class Settings(BaseSettings):
     persist_dir: Path = Path("./chroma_db")
     collection: str = "firstTry"
     reranker_model: str = "cross-encoder/ms-marco-MiniLM-L6-v2"
+    rerank_pool_size: int = 20
+    hybrid_fetch_pool_size: int = 10

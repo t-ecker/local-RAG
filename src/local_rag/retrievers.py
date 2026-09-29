@@ -66,10 +66,10 @@ def retrieve_hybrid(
     retrieved_chunks: list[list[Document]] = []
 
     results_semantic = retrieve_semantic(
-        store, settings, question, selected_documents, k * 2
+        store, settings, question, selected_documents, settings.hybrid_fetch_pool_size
     )
     results_lexical = retrieve_lexical(
-        store, settings, question, selected_documents, k * 2
+        store, settings, question, selected_documents, settings.hybrid_fetch_pool_size
     )
     retrieved_chunks.append([chunk for chunk, score in results_semantic])
     retrieved_chunks.append([chunk for chunk, score in results_lexical])
@@ -95,7 +95,7 @@ def retrieve_hybrid_rerank(
     k: int,
 ) -> list[tuple[Document, float]]:
     retrieved_chunks = retrieve_hybrid(
-        store, settings, question, selected_documents, k * 2
+        store, settings, question, selected_documents, settings.rerank_pool_size
     )
 
     model = get_rerank_model(settings.reranker_model)
