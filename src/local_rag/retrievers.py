@@ -35,7 +35,7 @@ def retrieve_lexical(
     )
     retriever = bm25s.BM25()
     retriever.index(corpus_tokens)
-    query_tokens = bm25s.tokenize(question, stemmer=stemmer)
+    query_tokens = bm25s.tokenize(question, stopwords=language, stemmer=stemmer)
     chunks, scores = retriever.retrieve(
         query_tokens, k=min(k, len(corpus)), corpus=corpus, return_as="tuple"
     )

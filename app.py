@@ -103,6 +103,8 @@ def handle_uploads(files):
                 )
         except LocalRagError as e:
             st.toast(f"{e!s}. File: {filename} didnt upload", icon="⚠️")
+            vector_store.delete_document(path)
+            Path(path).unlink(missing_ok=True)
     st.toast(f"successfully embedded: {count} new file(s)")
 
 
@@ -188,6 +190,7 @@ with st.sidebar:
                 ):
                     try:
                         vector_store.delete_document(file["path"])
+                        Path(file["path"]).unlink(missing_ok=True)
                         st.toast(f"successfully deleted file: {file['name']}")
                         st.rerun()
                     except LocalRagError as e:
@@ -201,6 +204,8 @@ with st.sidebar:
             ):
                 try:
                     vector_store.delete_all()
+                    for file in files:
+                        Path(file["path"]).unlink(missing_ok=True)
                     st.toast("cleared vector store")
                     st.rerun()
                 except LocalRagError as e:
