@@ -1,11 +1,23 @@
 import operator
+from functools import cache
 
 import bm25s
 import Stemmer  # ty: ignore[unresolved-import]
 from langchain_core.documents import Document
+from sentence_transformers import CrossEncoder
 
 from local_rag.config import Settings
 from local_rag.store import DocumentStore
+
+
+@cache
+def get_rerank_model(model_name: str) -> CrossEncoder:
+    print(
+        f"Loading reranker model '{model_name}' "
+        "(first run only. the output below is normal)",
+        flush=True,
+    )
+    return CrossEncoder(model_name)
 
 
 def retrieve_semantic(
@@ -75,8 +87,29 @@ def retrieve_hybrid(
     return [(all_chunks[id], score) for id, score in top_k]
 
 
+def retrieve_hybrid_rerank(
+    store: DocumentStore,
+    settings: Settings,
+    question: str,
+    selected_documents: list[str],
+    k: int,
+) -> list[tuple[Document, float]]:
+    retrieved_chunks = retrieve_hybrid(
+        store, settings, question, selected_documents, k * 2
+    )
+
+    model = get_rerank_model(settings.reranker_model)
+    ranks = model.rank(question, [c.page_content for c, _ in retrieved_chunks], top_k=k)
+    results = []
+    for rank in ranks:
+        chunk, _ = retrieved_chunks[int(rank["corpus_id"])]
+        results.append((chunk, float(rank["score"])))
+    return results
+
+
 RETRIEVERS = {
     "semantic": retrieve_semantic,
     "lexical": retrieve_lexical,
     "hybrid": retrieve_hybrid,
+    "hybrid_rerank": retrieve_hybrid_rerank,
 }

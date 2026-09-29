@@ -13,3 +13,7 @@
 - https://medium.com/@alexrodriguesj/hybrid-search-rag-revolutionizing-information-retrieval-9905d3437cdd
 - https://github.com/xhluca/bm25s
 - https://medium.com/@devalshah1619/mathematical-intuition-behind-reciprocal-rank-fusion-rrf-explained-in-2-mins-002df0cc5e2a
+- https://huggingface.co/cross-encoder/ms-marco-MiniLM-L6-v2
+- https://sbert.net/docs/package_reference/cross_encoder/model.html#sentence_transformers.cross_encoder.CrossEncoder.rank
+- https://stackoverflow.com/questions/66683480/why-does-documentation-use-lru-cache-decorated-function-to-get-settings-instead
+- https://docs.python.org/3/library/functools.html#functools.cache

@@ -1,3 +1,4 @@
+import logging
 from itertools import chain
 from pathlib import Path
 
@@ -9,6 +10,8 @@ from local_rag.ingest import load_chunks
 from local_rag.query import RagEngine
 from local_rag.retrievers import RETRIEVERS
 from local_rag.store import DocumentStore
+
+logging.getLogger("streamlit.watcher.local_sources_watcher").setLevel(logging.ERROR)
 
 UPLOAD_DIR = "./uploads"
 
@@ -23,13 +26,32 @@ def source_columns(mode: str) -> dict:
         score = st.column_config.ProgressColumn(
             "Relevance", min_value=0.0, max_value=1.0, format="%.2f"
         )
-    if mode == "lexical" or mode == "hybrid":
+    else:
         score = st.column_config.NumberColumn("Score", format="%.2f")
     return {
         "Source": st.column_config.TextColumn("Source"),
         "Page": st.column_config.TextColumn("Page"),
         "Relevance": score,
     }
+
+
+SCORE_EXPLANATIONS = {
+    "semantic": (
+        "Relevance: cosine similarity between question and chunk "
+        "(0-1, higher is more similar)"
+    ),
+    "lexical": (
+        "Score: BM25 keyword-match score (unbounded, higher means more matching terms)"
+    ),
+    "hybrid": (
+        "Score: reciprocal rank fusion (RRF) combining the semantic and "
+        "lexical rankings (unbounded, higher means it ranked well in both)"
+    ),
+    "hybrid_rerank": (
+        "Score: cross-encoder relevance score "
+        "(unbounded, can be negative; higher is more relevant)"
+    ),
+}
 
 
 @st.cache_resource
@@ -129,10 +151,10 @@ with st.sidebar:
         st.caption("All files stay on this machine")
 
     with st.expander("Mode"):
-        st.segmented_control(
+        st.radio(
             "Retrieval mode",
             list(RETRIEVERS),
-            default="hybrid",
+            index=list(RETRIEVERS).index("hybrid"),
             label_visibility="collapsed",
             key="retrieval_mode",
         )
@@ -214,6 +236,7 @@ for message in st.session_state.messages:
                     hide_index=True,
                     column_config=source_columns(message["mode"]),
                 )
+                st.caption(SCORE_EXPLANATIONS[message["mode"]])
 
 if question := st.chat_input("Ask about your documents"):
     try:

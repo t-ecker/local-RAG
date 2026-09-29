@@ -16,3 +16,4 @@ class Settings(BaseSettings):
     reasoning: bool = False
     persist_dir: Path = Path("./chroma_db")
     collection: str = "firstTry"
+    reranker_model: str = "cross-encoder/ms-marco-MiniLM-L6-v2"
