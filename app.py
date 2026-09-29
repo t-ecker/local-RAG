@@ -3,6 +3,8 @@ from itertools import chain
 from pathlib import Path
 
 import streamlit as st
+from langchain_core.documents import Document
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 from local_rag.config import Settings
 from local_rag.engine import RagEngine
@@ -20,20 +22,6 @@ AVATARS = {
     "user": ":material/person:",
     "assistant": ":material/find_in_page:",
 }
-
-
-def source_columns(mode: str) -> dict:
-    if mode == "semantic":
-        score = st.column_config.ProgressColumn(
-            "Relevance", min_value=0.0, max_value=1.0, format="%.2f"
-        )
-    else:
-        score = st.column_config.NumberColumn("Score", format="%.2f")
-    return {
-        "Source": st.column_config.TextColumn("Source"),
-        "Page": st.column_config.TextColumn("Page"),
-        "Relevance": score,
-    }
 
 
 SCORE_EXPLANATIONS = {
@@ -55,27 +43,34 @@ SCORE_EXPLANATIONS = {
 }
 
 
-@st.cache_resource
-def get_settings() -> Settings:
-    return Settings()
+def to_source_rows(retrieved_chunks: list[tuple[Document, float]]):
+    source_rows = []
+    for chunk, score in retrieved_chunks:
+        source_rows.append(
+            {
+                "Source": Path(chunk.metadata["source"]).name,
+                "Page": format_page(chunk.metadata),
+                "Relevance": score,
+            }
+        )
+    return source_rows
 
 
-@st.cache_resource
-def get_store(_settings: Settings) -> DocumentStore:
-    return DocumentStore(_settings)
+def source_columns(mode: str) -> dict:
+    if mode == "semantic":
+        score = st.column_config.ProgressColumn(
+            "Relevance", min_value=0.0, max_value=1.0, format="%.2f"
+        )
+    else:
+        score = st.column_config.NumberColumn("Score", format="%.2f")
+    return {
+        "Source": st.column_config.TextColumn("Source"),
+        "Page": st.column_config.TextColumn("Page"),
+        "Relevance": score,
+    }
 
 
-@st.cache_resource
-def get_engine(_settings: Settings, _store: DocumentStore) -> RagEngine:
-    return RagEngine(_settings, store=_store)
-
-
-settings = get_settings()
-store = get_store(settings)
-engine = get_engine(settings, store)
-
-
-def save_uploads(files) -> list[str]:
+def save_uploads(files: list[UploadedFile]) -> list[str]:
     upload_dir = Path(UPLOAD_DIR)
     upload_dir.mkdir(parents=True, exist_ok=True)
 
@@ -89,7 +84,9 @@ def save_uploads(files) -> list[str]:
     return paths
 
 
-def handle_uploads(files):
+def handle_uploads(
+    settings: Settings, store: DocumentStore, files: list[UploadedFile]
+) -> None:
     paths = save_uploads(files)
     count = 0
     for path in paths:
@@ -109,29 +106,38 @@ def handle_uploads(files):
     st.toast(f"successfully embedded: {count} new file(s)")
 
 
-st.set_page_config(
-    page_title="local-RAG",
-    page_icon="",
-    layout="centered",
-    initial_sidebar_state="locked",
-)
+def init_session_state() -> None:
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-if "upload_round" not in st.session_state:
-    st.session_state.upload_round = 0
+    if "upload_round" not in st.session_state:
+        st.session_state.upload_round = 0
 
 
-with st.sidebar:
-    st.subheader(":primary[local·RAG]")
+@st.cache_resource
+def get_settings() -> Settings:
+    return Settings()
 
+
+@st.cache_resource
+def get_store(_settings: Settings) -> DocumentStore:
+    return DocumentStore(_settings)
+
+
+@st.cache_resource
+def get_engine(_settings: Settings, _store: DocumentStore) -> RagEngine:
+    return RagEngine(_settings, store=_store)
+
+
+def render_store_state(store: DocumentStore) -> None:
     with st.container(border=True, gap=5):
         st.caption(":blue-background[**Vector Store**]")
         docs_col, chunks_col = st.columns(2)
         docs_col.metric(":gray[Documents]", store.count_sources())
         chunks_col.metric(":gray[Chunks]", store.count_chunks())
 
+
+def render_uploader(settings: Settings, store: DocumentStore) -> None:
     with st.expander("Documents", expanded=True):
         staged = st.file_uploader(
             "Add documents",
@@ -147,14 +153,16 @@ with st.sidebar:
             disabled=not staged,
             help="Embeds the staged files and stores them in Chroma",
         ):
-            handle_uploads(staged)
+            handle_uploads(settings, store, staged)
             st.session_state.upload_round += 1
             st.rerun()
 
         st.caption("All files stay on this machine")
 
+
+def render_retrieval_mode() -> str | None:
     with st.expander("Mode"):
-        st.radio(
+        return st.radio(
             "Retrieval mode",
             list(RETRIEVERS),
             index=list(RETRIEVERS).index("hybrid"),
@@ -162,6 +170,8 @@ with st.sidebar:
             key="retrieval_mode",
         )
 
+
+def render_scope(store: DocumentStore) -> list[str]:
     with st.expander("Scope"), st.container(gap=None):
         sources = store.list_sources()
         files = [{"name": Path(source).name, "path": source} for source in sources]
@@ -214,6 +224,12 @@ with st.sidebar:
         else:
             st.caption("vector store is empty")
 
+        return [
+            file["path"] for file in files if st.session_state[f"scope_{file['name']}"]
+        ]
+
+
+def render_system_info(settings: Settings) -> None:
     with st.expander("System"):
         with st.container(gap=None):
             st.caption(":blue-background[**Models**]")
@@ -232,44 +248,36 @@ with st.sidebar:
             st.caption(f":small[overlap: {settings.chunk_overlap} characters]")
 
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"], avatar=AVATARS[message["role"]]):
-        st.markdown(message["text"])
-        if message["role"] == "assistant":
-            with st.expander("Sources"):
-                st.dataframe(
-                    message["sources"],
-                    hide_index=True,
-                    column_config=source_columns(message["mode"]),
-                )
-                st.caption(SCORE_EXPLANATIONS[message["mode"]])
+def render_chat_history() -> None:
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"], avatar=AVATARS[message["role"]]):
+            st.markdown(message["text"])
+            if message["role"] == "assistant":
+                with st.expander("Sources"):
+                    st.dataframe(
+                        message["sources"],
+                        hide_index=True,
+                        column_config=source_columns(message["mode"]),
+                    )
+                    st.caption(SCORE_EXPLANATIONS[message["mode"]])
 
-if question := st.chat_input("Ask about your documents"):
+
+def answer_question(
+    engine: RagEngine,
+    question: str,
+    selected_sources: list[str],
+    mode: str | None,
+) -> None:
     try:
         with st.chat_message(name="user", avatar=AVATARS["user"]):
             st.markdown(question)
 
         with st.chat_message("assistant", avatar=AVATARS["assistant"]):
             with st.spinner("thinking...", show_time=True):
-                selected_sources = []
-                for file in files:
-                    if st.session_state[f"scope_{file['name']}"]:
-                        selected_sources.append(file["path"])
-                if st.session_state.retrieval_mode is None:
+                if mode is None:
                     raise NoSelectionError("no retrieval mode selected")
 
-                retrieved_chunks = engine.retrieve(
-                    question, selected_sources, st.session_state.retrieval_mode
-                )
-                source_rows = []
-                for chunk, score in retrieved_chunks:
-                    source_rows.append(
-                        {
-                            "Source": Path(chunk.metadata["source"]).name,
-                            "Page": format_page(chunk.metadata),
-                            "Relevance": score,
-                        }
-                    )
+                retrieved_chunks = engine.retrieve(question, selected_sources, mode)
                 answer = engine.stream_answer(question, retrieved_chunks)
                 first_token = next((token for token in answer if token), "")
 
@@ -280,14 +288,47 @@ if question := st.chat_input("Ask about your documents"):
             {
                 "role": "assistant",
                 "text": response,
-                "sources": source_rows,
-                "mode": st.session_state.retrieval_mode,
+                "sources": to_source_rows(retrieved_chunks),
+                "mode": mode,
             }
         )
     except LocalRagError as e:
         st.toast(str(e), icon="⚠️")
     st.rerun()
 
-if not st.session_state.messages:
+
+def render_empty_chat_history() -> None:
     st.subheader("Ask your documents a question.")
-    st.caption("Add files from the sidebar, then ask in your own words")
+    st.caption("Add files from the sidebar, then ask them anything in your own words")
+
+
+def main() -> None:
+    st.set_page_config(
+        page_title="local-RAG",
+        page_icon="",
+        layout="centered",
+        initial_sidebar_state="locked",
+    )
+    init_session_state()
+
+    settings = get_settings()
+    store = get_store(settings)
+    engine = get_engine(settings, store)
+
+    with st.sidebar:
+        st.subheader(":primary[local·RAG]")
+        render_store_state(store)
+        render_uploader(settings, store)
+        mode = render_retrieval_mode()
+        selected_sources = render_scope(store)
+        render_system_info(settings)
+
+    render_chat_history()
+    if question := st.chat_input("Ask anything about your documents"):
+        answer_question(engine, question, selected_sources, mode)
+    elif not st.session_state.messages:
+        render_empty_chat_history()
+
+
+if __name__ == "__main__":
+    main()
