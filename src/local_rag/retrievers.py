@@ -14,29 +14,29 @@ def retrieve_semantic(
     store: DocumentStore,
     settings: Settings,
     question: str,
-    selected_documents: list[str],
+    selected_sources: list[str],
     k: int,
 ) -> list[tuple[Document, float]]:
-    return store.retrieve_semantic(question, selected_documents, k)
+    return store.similarity_search(question, selected_sources, k)
 
 
 def retrieve_lexical(
     store: DocumentStore,
     settings: Settings,
     question: str,
-    selected_documents: list[str],
+    selected_sources: list[str],
     k: int,
 ) -> list[tuple[Document, float]]:
-    corpus = store.get_documents(selected_documents)
+    corpus = store.get_chunks(selected_sources)
     language = settings.corpus_language
     stemmer = Stemmer.Stemmer(language)
     corpus_tokens = bm25s.tokenize(
         [c.page_content for c in corpus], stopwords=language, stemmer=stemmer
     )
-    retriever = bm25s.BM25()
-    retriever.index(corpus_tokens)
+    bm25 = bm25s.BM25()
+    bm25.index(corpus_tokens)
     query_tokens = bm25s.tokenize(question, stopwords=language, stemmer=stemmer)
-    chunks, scores = retriever.retrieve(
+    chunks, scores = bm25.retrieve(
         query_tokens, k=min(k, len(corpus)), corpus=corpus, return_as="tuple"
     )
     results: list[tuple[Document, float]] = []
@@ -50,49 +50,49 @@ def retrieve_hybrid(
     store: DocumentStore,
     settings: Settings,
     question: str,
-    selected_documents: list[str],
+    selected_sources: list[str],
     k: int,
 ) -> list[tuple[Document, float]]:
-    retrieved_chunks: list[list[Document]] = []
+    rankings: list[list[Document]] = []
 
     results_semantic = retrieve_semantic(
-        store, settings, question, selected_documents, settings.hybrid_fetch_pool_size
+        store, settings, question, selected_sources, settings.hybrid_pool_size
     )
     results_lexical = retrieve_lexical(
-        store, settings, question, selected_documents, settings.hybrid_fetch_pool_size
+        store, settings, question, selected_sources, settings.hybrid_pool_size
     )
-    retrieved_chunks.append([chunk for chunk, score in results_semantic])
-    retrieved_chunks.append([chunk for chunk, score in results_lexical])
+    rankings.append([chunk for chunk, score in results_semantic])
+    rankings.append([chunk for chunk, score in results_lexical])
 
     scores: dict[str, float] = {}
-    all_chunks = {}
+    chunks_by_id = {}
 
-    for chunk_list in retrieved_chunks:
-        for i, chunk in enumerate(chunk_list):
+    for ranking in rankings:
+        for i, chunk in enumerate(ranking):
             assert chunk.id is not None
             scores[chunk.id] = scores.get(chunk.id, 0.0) + 1 / (60 + i + 1)
-            all_chunks[chunk.id] = chunk
+            chunks_by_id[chunk.id] = chunk
 
     top_k = sorted(scores.items(), key=operator.itemgetter(1), reverse=True)[:k]
-    return [(all_chunks[id], score) for id, score in top_k]
+    return [(chunks_by_id[chunk_id], score) for chunk_id, score in top_k]
 
 
 def retrieve_hybrid_rerank(
     store: DocumentStore,
     settings: Settings,
     question: str,
-    selected_documents: list[str],
+    selected_sources: list[str],
     k: int,
 ) -> list[tuple[Document, float]]:
-    retrieved_chunks = retrieve_hybrid(
-        store, settings, question, selected_documents, settings.rerank_pool_size
+    candidates = retrieve_hybrid(
+        store, settings, question, selected_sources, settings.rerank_pool_size
     )
 
     model: CrossEncoder = get_reranker(settings.reranker_model)
-    ranks = model.rank(question, [c.page_content for c, _ in retrieved_chunks], top_k=k)
+    ranks = model.rank(question, [c.page_content for c, _ in candidates], top_k=k)
     results = []
     for rank in ranks:
-        chunk, _ = retrieved_chunks[int(rank["corpus_id"])]
+        chunk, _ = candidates[int(rank["corpus_id"])]
         results.append((chunk, float(rank["score"])))
     return results
 

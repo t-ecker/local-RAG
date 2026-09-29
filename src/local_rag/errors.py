@@ -7,11 +7,11 @@ class ProviderError(LocalRagError):
 
 
 class ProviderUnavailableError(ProviderError):
-    """Model provider isnt reachable"""
+    """Model provider isn't reachable"""
 
 
 class ModelNotFoundError(ProviderError):
-    """Requested model doesnt exist at the provider"""
+    """Requested model doesn't exist at the provider"""
 
 
 class NoDocumentsError(LocalRagError):
@@ -19,16 +19,16 @@ class NoDocumentsError(LocalRagError):
 
 
 class NoSelectionError(LocalRagError):
-    """No Docuemnts or Mode selected to search in / with"""
+    """No Documents or Mode selected to search in / with"""
 
 
 class DocumentLoadError(LocalRagError):
-    """Document couldnt be loaded / embedded"""
+    """Document couldn't be loaded / embedded"""
 
 
 class NoExtractableTextError(LocalRagError):
     """Nothing could be extracted out of a document"""
 
 
-class InvalidRetrieveModeError(LocalRagError):
-    """Retrieve Mode is unknown"""
+class InvalidRetrievalModeError(LocalRagError):
+    """Retrieval mode is unknown"""

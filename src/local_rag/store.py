@@ -17,28 +17,28 @@ class DocumentStore:
         )
         self._settings = settings
 
-    def add_in_batches(self, chunks: list[Document], batch_size: int = 100) -> None:
+    def add_chunks(self, chunks: list[Document], batch_size: int = 100) -> None:
         for i in range(0, len(chunks), batch_size):
             batch = chunks[i : i + batch_size]
             with provider_errors(self._settings.ollama_embeddings_model):
                 self._chroma.add_documents(documents=batch)
             print(f"embedded: {i + len(batch)}/{len(chunks)}")
 
-    def retrieve_semantic(
-        self, query: str, selected_documents: list[str], k: int
+    def similarity_search(
+        self, question: str, selected_sources: list[str], k: int
     ) -> list[tuple[Document, float]]:
         with provider_errors(self._settings.ollama_embeddings_model):
             return self._chroma.similarity_search_with_relevance_scores(
-                query, k, filter={"source": {"$in": selected_documents}}
+                question, k, filter={"source": {"$in": selected_sources}}
             )
 
-    def is_present(self, source: str) -> bool:
+    def contains(self, source: str) -> bool:
         return bool(self._chroma.get(where={"source": source}, limit=1)["ids"])
 
     def replace_document(self, source: str, chunks: list[Document]) -> None:
         print(f"replacing {source}")
         self._chroma.delete(where={"source": source})
-        self.add_in_batches(chunks)
+        self.add_chunks(chunks)
 
     def delete_all(self) -> None:
         entries = self._chroma.get()
@@ -47,25 +47,25 @@ class DocumentStore:
             self._chroma.delete(ids)
         else:
             raise NoDocumentsError(
-                "there are no documents in the vectore store to delete"
+                "there are no documents in the vector store to delete"
             )
 
-    def delete_document(self, source: str) -> None:
+    def delete_source(self, source: str) -> None:
         entries = self._chroma.get(where={"source": source})
         self._chroma.delete(entries["ids"])
 
-    def get_stored_documents(self) -> set:
+    def list_sources(self) -> set[str]:
         data = self._chroma.get(include=["metadatas"])
         sources: set[str] = {m["source"] for m in data["metadatas"]}
         return sources
 
-    def get_stored_document_amount(self) -> int:
-        return len(self.get_stored_documents())
+    def count_sources(self) -> int:
+        return len(self.list_sources())
 
-    def get_stored_chunk_amount(self) -> int:
+    def count_chunks(self) -> int:
         return self._chroma._collection.count()
 
-    def get_documents(self, sources: list[str]) -> list[Document]:
+    def get_chunks(self, sources: list[str]) -> list[Document]:
         srcs: list[str | float] = list(sources)
         data = self._chroma.get(where={"source": {"$in": srcs}})
         chunks = []

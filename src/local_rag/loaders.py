@@ -6,7 +6,7 @@ from langchain_core.documents import Document
 from local_rag.errors import DocumentLoadError
 
 
-def pdf_loader(path: str) -> list[Document]:
+def load_pdf(path: str) -> list[Document]:
     reader = pypdf.PdfReader(path)
     pages = []
     for i, page in enumerate(reader.pages, start=1):
@@ -19,18 +19,18 @@ def pdf_loader(path: str) -> list[Document]:
     return pages
 
 
-def txt_and_md_loader(path: str) -> list[Document]:
+def load_text(path: str) -> list[Document]:
     content = Path(path).read_text(encoding="utf-8")
     return [Document(content, metadata={"source": path})]
 
 
-def file_loading_router(path: str) -> list[Document]:
-    p = Path(path)
-    if not p.is_file():
+def load_file(path: str) -> list[Document]:
+    file_path = Path(path)
+    if not file_path.is_file():
         raise DocumentLoadError(f"file not found: {path}")
-    suffix = p.suffix.lower()
+    suffix = file_path.suffix.lower()
     if suffix == ".pdf":
-        return pdf_loader(path)
+        return load_pdf(path)
     if suffix == ".txt" or suffix == ".md":
-        return txt_and_md_loader(path)
+        return load_text(path)
     raise DocumentLoadError("filetype not supported (use .pdf .txt or .md)")

@@ -29,7 +29,7 @@ def provider_errors(model_name: str) -> Iterator[None]:
 
 def get_llm(settings: Settings) -> BaseChatModel:
     return ChatOllama(
-        model=settings.ollama_model,
+        model=settings.ollama_chat_model,
         temperature=settings.temperature,
         base_url=settings.ollama_base_url,
         reasoning=settings.reasoning,

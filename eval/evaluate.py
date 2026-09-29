@@ -31,7 +31,7 @@ def is_chunk_correct(test, chunk: Document):
     return False
 
 
-def check_chunks(test, retrieved_chunks):
+def find_hit_rank(test, retrieved_chunks):
     for i, (chunk, _) in enumerate(retrieved_chunks, start=1):
         if is_chunk_correct(test, chunk):
             return i
@@ -48,7 +48,7 @@ def evaluate_retrieval(data_set, retrieve_fn):
         amount_valid_tests += 1
         retrieved_chunks = retrieve_fn(test["question"])
         for top_k in TOP_K_LIST:
-            if (i := check_chunks(test, retrieved_chunks[:top_k])) is not None:
+            if (i := find_hit_rank(test, retrieved_chunks[:top_k])) is not None:
                 hits_recall[top_k] += 1.0
                 hits_mrr[top_k] += 1 / i
     scores = []
@@ -80,13 +80,13 @@ def main():
     settings_updated = settings_base.model_copy(
         update={"persist_dir": Path("./eval/chroma_db")}
     )
-    vector_store = DocumentStore(settings_updated)
+    store = DocumentStore(settings_updated)
 
     corpus_paths = [str(path) for path in Path("./eval/corpus/").iterdir()]
 
-    if vector_store.get_stored_chunk_amount() == 0:
+    if store.count_chunks() == 0:
         for path in corpus_paths:
-            vector_store.add_in_batches(load_chunks(settings_updated, str(path)))
+            store.add_chunks(load_chunks(settings_updated, str(path)))
 
     with open("./eval/eval_set_resolved.json") as file:
         data_set = json.load(file)
@@ -95,9 +95,9 @@ def main():
     for mode, retriever in RETRIEVERS.items():
         retrieve_fn = partial(
             retriever,
-            vector_store,
+            store,
             settings_updated,
-            selected_documents=corpus_paths,
+            selected_sources=corpus_paths,
             k=max(TOP_K_LIST),
         )
         results[mode] = evaluate_retrieval(data_set, retrieve_fn)

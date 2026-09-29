@@ -5,9 +5,9 @@ from pathlib import Path
 import streamlit as st
 
 from local_rag.config import Settings
+from local_rag.engine import RagEngine
 from local_rag.errors import LocalRagError, NoSelectionError
 from local_rag.ingest import load_chunks
-from local_rag.query import RagEngine
 from local_rag.retrievers import RETRIEVERS
 from local_rag.store import DocumentStore
 
@@ -55,23 +55,23 @@ SCORE_EXPLANATIONS = {
 
 
 @st.cache_resource
-def build_settings() -> Settings:
+def get_settings() -> Settings:
     return Settings()
 
 
 @st.cache_resource
-def build_vector_store(_settings: Settings) -> DocumentStore:
+def get_store(_settings: Settings) -> DocumentStore:
     return DocumentStore(_settings)
 
 
 @st.cache_resource
-def build_rag_engine(_settings: Settings, _store: DocumentStore) -> RagEngine:
-    return RagEngine(_settings, document_store=_store)
+def get_engine(_settings: Settings, _store: DocumentStore) -> RagEngine:
+    return RagEngine(_settings, store=_store)
 
 
-settings = build_settings()
-vector_store = build_vector_store(settings)
-rag_engine = build_rag_engine(settings, vector_store)
+settings = get_settings()
+store = get_store(settings)
+engine = get_engine(settings, store)
 
 
 def save_uploads(files) -> list[str]:
@@ -94,16 +94,16 @@ def handle_uploads(files):
     for path in paths:
         try:
             filename = Path(path).name
-            if not vector_store.is_present(path):
-                vector_store.add_in_batches(chunks=load_chunks(settings, path))
+            if not store.contains(path):
+                store.add_chunks(chunks=load_chunks(settings, path))
                 count += 1
             else:
                 st.toast(
                     f"File: {filename} already exists in the vector store", icon="⚠️"
                 )
         except LocalRagError as e:
-            st.toast(f"{e!s}. File: {filename} didnt upload", icon="⚠️")
-            vector_store.delete_document(path)
+            st.toast(f"{e!s}. File: {filename} didn't upload", icon="⚠️")
+            store.delete_source(path)
             Path(path).unlink(missing_ok=True)
     st.toast(f"successfully embedded: {count} new file(s)")
 
@@ -128,8 +128,8 @@ with st.sidebar:
     with st.container(border=True, gap=5):
         st.caption(":blue-background[**Vector Store**]")
         docs_col, chunks_col = st.columns(2)
-        docs_col.metric(":gray[Documents]", vector_store.get_stored_document_amount())
-        chunks_col.metric(":gray[Chunks]", vector_store.get_stored_chunk_amount())
+        docs_col.metric(":gray[Documents]", store.count_sources())
+        chunks_col.metric(":gray[Chunks]", store.count_chunks())
 
     with st.expander("Documents", expanded=True):
         staged = st.file_uploader(
@@ -162,7 +162,7 @@ with st.sidebar:
         )
 
     with st.expander("Scope"), st.container(gap=None):
-        sources = vector_store.get_stored_documents()
+        sources = store.list_sources()
         files = [{"name": Path(source).name, "path": source} for source in sources]
         for file in files:
             st.session_state.setdefault(f"scope_{file['name']}", True)
@@ -189,7 +189,7 @@ with st.sidebar:
                     help=f"Remove {file['name']} from the vector store",
                 ):
                     try:
-                        vector_store.delete_document(file["path"])
+                        store.delete_source(file["path"])
                         Path(file["path"]).unlink(missing_ok=True)
                         st.toast(f"successfully deleted file: {file['name']}")
                         st.rerun()
@@ -203,7 +203,7 @@ with st.sidebar:
                 help="Removes every embedded chunk from the vector store",
             ):
                 try:
-                    vector_store.delete_all()
+                    store.delete_all()
                     for file in files:
                         Path(file["path"]).unlink(missing_ok=True)
                     st.toast("cleared vector store")
@@ -216,7 +216,7 @@ with st.sidebar:
     with st.expander("System"):
         with st.container(gap=None):
             st.caption(":blue-background[**Models**]")
-            st.caption(f":small[chat: {settings.ollama_model}]")
+            st.caption(f":small[chat: {settings.ollama_chat_model}]")
             st.caption(f":small[embeddings: {settings.ollama_embeddings_model}]")
             st.caption(f":small[running at: {settings.ollama_base_url}]")
 
@@ -237,7 +237,7 @@ for message in st.session_state.messages:
         if message["role"] == "assistant":
             with st.expander("Sources"):
                 st.dataframe(
-                    message["metadata"],
+                    message["sources"],
                     hide_index=True,
                     column_config=source_columns(message["mode"]),
                 )
@@ -250,20 +250,20 @@ if question := st.chat_input("Ask about your documents"):
 
         with st.chat_message("assistant", avatar=AVATARS["assistant"]):
             with st.spinner("thinking...", show_time=True):
-                selected_documents = []
+                selected_sources = []
                 for file in files:
                     if st.session_state[f"scope_{file['name']}"]:
-                        selected_documents.append(file["path"])
+                        selected_sources.append(file["path"])
                 if st.session_state.retrieval_mode is None:
-                    raise NoSelectionError("no retrival mode selected")
+                    raise NoSelectionError("no retrieval mode selected")
 
-                retrieved_chunks = rag_engine.retrieve(
-                    question, selected_documents, st.session_state.retrieval_mode
+                retrieved_chunks = engine.retrieve(
+                    question, selected_sources, st.session_state.retrieval_mode
                 )
-                chunks_metadata = []
+                source_rows = []
                 for chunk, score in retrieved_chunks:
                     page = chunk.metadata.get("page")
-                    chunks_metadata.append(
+                    source_rows.append(
                         {
                             "Source": Path(chunk.metadata["source"]).name,
                             "Page": str(page)
@@ -272,7 +272,7 @@ if question := st.chat_input("Ask about your documents"):
                             "Relevance": score,
                         }
                     )
-                answer = rag_engine.stream_answer(question, retrieved_chunks)
+                answer = engine.stream_answer(question, retrieved_chunks)
                 first_token = next((token for token in answer if token), "")
 
             response = st.write_stream(chain([first_token], answer))
@@ -282,7 +282,7 @@ if question := st.chat_input("Ask about your documents"):
             {
                 "role": "assistant",
                 "text": response,
-                "metadata": chunks_metadata,
+                "sources": source_rows,
                 "mode": st.session_state.retrieval_mode,
             }
         )
