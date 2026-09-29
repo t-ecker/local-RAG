@@ -32,13 +32,22 @@ def retrieve_lexical(
     language = settings.corpus_language
     stemmer = Stemmer.Stemmer(language)
     corpus_tokens = bm25s.tokenize(
-        [c.page_content for c in corpus], stopwords=language, stemmer=stemmer
+        [c.page_content for c in corpus],
+        stopwords=language,
+        stemmer=stemmer,
+        show_progress=False,
     )
     bm25 = bm25s.BM25()
-    bm25.index(corpus_tokens)
-    query_tokens = bm25s.tokenize(question, stopwords=language, stemmer=stemmer)
+    bm25.index(corpus_tokens, show_progress=False)
+    query_tokens = bm25s.tokenize(
+        question, stopwords=language, stemmer=stemmer, show_progress=False
+    )
     chunks, scores = bm25.retrieve(
-        query_tokens, k=min(k, len(corpus)), corpus=corpus, return_as="tuple"
+        query_tokens,
+        k=min(k, len(corpus)),
+        corpus=corpus,
+        return_as="tuple",
+        show_progress=False,
     )
     results: list[tuple[Document, float]] = []
     for i in range(len(chunks[0])):
