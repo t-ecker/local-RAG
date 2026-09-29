@@ -8,6 +8,7 @@ from local_rag.config import Settings
 from local_rag.engine import RagEngine
 from local_rag.errors import LocalRagError, NoSelectionError
 from local_rag.ingest import load_chunks
+from local_rag.loaders import LOADERS, format_page
 from local_rag.retrievers import RETRIEVERS
 from local_rag.store import DocumentStore
 
@@ -134,7 +135,7 @@ with st.sidebar:
     with st.expander("Documents", expanded=True):
         staged = st.file_uploader(
             "Add documents",
-            type=["pdf", "txt", "md"],
+            type=list(LOADERS),
             accept_multiple_files=True,
             label_visibility="collapsed",
             key=f"uploads_{st.session_state.upload_round}",
@@ -262,13 +263,10 @@ if question := st.chat_input("Ask about your documents"):
                 )
                 source_rows = []
                 for chunk, score in retrieved_chunks:
-                    page = chunk.metadata.get("page")
                     source_rows.append(
                         {
                             "Source": Path(chunk.metadata["source"]).name,
-                            "Page": str(page)
-                            if page is not None
-                            else "not available for this file type",
+                            "Page": format_page(chunk.metadata),
                             "Relevance": score,
                         }
                     )

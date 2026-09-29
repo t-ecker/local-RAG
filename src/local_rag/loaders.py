@@ -28,9 +28,19 @@ def load_file(path: str) -> list[Document]:
     file_path = Path(path)
     if not file_path.is_file():
         raise DocumentLoadError(f"file not found: {path}")
-    suffix = file_path.suffix.lower()
-    if suffix == ".pdf":
-        return load_pdf(path)
-    if suffix == ".txt" or suffix == ".md":
-        return load_text(path)
-    raise DocumentLoadError("filetype not supported (use .pdf .txt or .md)")
+    loader = LOADERS.get(file_path.suffix.lower())
+    if loader is None:
+        raise DocumentLoadError(f"filetype not supported (use {' '.join(LOADERS)})")
+    return loader(path)
+
+
+def format_page(metadata: dict) -> str:
+    page = metadata.get("page")
+    return str(page) if page is not None else "not available for this file type"
+
+
+LOADERS = {
+    ".pdf": load_pdf,
+    ".txt": load_text,
+    ".md": load_text,
+}

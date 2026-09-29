@@ -17,14 +17,8 @@ def build_messages(
     question: str, retrieved_chunks: list[tuple[Document, float]]
 ) -> list[tuple[str, str]]:
     context = ""
-    for chunk, score in retrieved_chunks:
-        page = chunk.metadata.get("page") or "not available for this file type"
-        context += (
-            f"\n\n[Source: {chunk.metadata.get('source')}, "
-            f"page: {page}, score={score:.3f}]\n"
-            f"{chunk.page_content}"
-        )
-    # print(f"\ncontext: {context}\n\n\n")
+    for chunk, _ in retrieved_chunks:
+        context += f"\n\n[Source: {chunk.metadata.get('source')}, {chunk.page_content}"
 
     return [
         ("system", SYSTEM_PROMPT.format(context=context)),
