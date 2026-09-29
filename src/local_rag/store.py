@@ -22,7 +22,6 @@ class DocumentStore:
             batch = chunks[i : i + batch_size]
             with provider_errors(self._settings.ollama_embeddings_model):
                 self._chroma.add_documents(documents=batch)
-            print(f"embedded: {i + len(batch)}/{len(chunks)}")
 
     def similarity_search(
         self, question: str, selected_sources: list[str], k: int
@@ -34,11 +33,6 @@ class DocumentStore:
 
     def contains(self, source: str) -> bool:
         return bool(self._chroma.get(where={"source": source}, limit=1)["ids"])
-
-    def replace_document(self, source: str, chunks: list[Document]) -> None:
-        print(f"replacing {source}")
-        self._chroma.delete(where={"source": source})
-        self.add_chunks(chunks)
 
     def delete_all(self) -> None:
         entries = self._chroma.get()

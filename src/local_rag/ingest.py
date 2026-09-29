@@ -22,5 +22,4 @@ def load_chunks(settings: Settings, path: str) -> list[Document]:
     chunks = split_into_chunks(settings, pages)
     if not chunks:
         raise NoExtractableTextError("no extractable text")
-    print(f"Pages: {len(pages)}, Chunks: {len(chunks)}")
     return chunks

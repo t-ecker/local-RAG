@@ -1,6 +1,6 @@
 from langchain_core.documents import Document
 
-SYSTEM_PROMPT = """You are an assistant that answers questions based only on \
+SYSTEM_PROMPT = """You are a friendly assistant that answers questions based only on \
 the provided context.
 
 Rules:
@@ -18,7 +18,7 @@ def build_messages(
 ) -> list[tuple[str, str]]:
     context = ""
     for chunk, _ in retrieved_chunks:
-        context += f"\n\n[Source: {chunk.metadata.get('source')}, {chunk.page_content}"
+        context += f"\n\n[Source: {chunk.metadata.get('source')}], {chunk.page_content}"
 
     return [
         ("system", SYSTEM_PROMPT.format(context=context)),

@@ -28,10 +28,10 @@ def load_file(path: str) -> list[Document]:
     file_path = Path(path)
     if not file_path.is_file():
         raise DocumentLoadError(f"file not found: {path}")
-    loader = LOADERS.get(file_path.suffix.lower())
-    if loader is None:
+    suffix = file_path.suffix.lower()
+    if suffix not in LOADERS:
         raise DocumentLoadError(f"filetype not supported (use {' '.join(LOADERS)})")
-    return loader(path)
+    return LOADERS[suffix](path)
 
 
 def format_page(metadata: dict) -> str:

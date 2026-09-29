@@ -3,11 +3,12 @@ import operator
 import bm25s
 import Stemmer  # ty: ignore[unresolved-import]
 from langchain_core.documents import Document
-from sentence_transformers import CrossEncoder
 
 from local_rag.config import Settings
 from local_rag.providers import get_reranker
 from local_rag.store import DocumentStore
+
+RRF_K = 60
 
 
 def retrieve_semantic(
@@ -70,7 +71,7 @@ def retrieve_hybrid(
     for ranking in rankings:
         for i, chunk in enumerate(ranking):
             assert chunk.id is not None
-            scores[chunk.id] = scores.get(chunk.id, 0.0) + 1 / (60 + i + 1)
+            scores[chunk.id] = scores.get(chunk.id, 0.0) + 1 / (RRF_K + i + 1)
             chunks_by_id[chunk.id] = chunk
 
     top_k = sorted(scores.items(), key=operator.itemgetter(1), reverse=True)[:k]
@@ -88,7 +89,7 @@ def retrieve_hybrid_rerank(
         store, settings, question, selected_sources, settings.rerank_pool_size
     )
 
-    model: CrossEncoder = get_reranker(settings.reranker_model)
+    model = get_reranker(settings.reranker_model)
     ranks = model.rank(question, [c.page_content for c, _ in candidates], top_k=k)
     results = []
     for rank in ranks:
