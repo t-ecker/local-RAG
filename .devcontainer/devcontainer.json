@@ -3,9 +3,6 @@
     "build": {
         "dockerfile": "Dockerfile"
     },
-    "forwardPorts": [
-        8501
-    ],
     "containerEnv": {
         "UV_LINK_MODE": "copy",
         "UV_PROJECT_ENVIRONMENT": "/home/vscode/.venv"

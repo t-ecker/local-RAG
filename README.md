@@ -17,3 +17,4 @@
 - https://sbert.net/docs/package_reference/cross_encoder/model.html#sentence_transformers.cross_encoder.CrossEncoder.rank
 - https://stackoverflow.com/questions/66683480/why-does-documentation-use-lru-cache-decorated-function-to-get-settings-instead
 - https://docs.python.org/3/library/functools.html#functools.cache
+- https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables

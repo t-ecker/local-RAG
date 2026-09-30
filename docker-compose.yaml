@@ -1,0 +1,15 @@
+services:
+  local-rag:
+    build:
+      context: .
+      args:
+        RERANKER_MODEL: ${RERANKER_MODEL}
+    image: local-rag
+    container_name: local-rag
+    ports:
+      - "127.0.0.1:8501:8501"
+    env_file: ".env"
+    volumes:
+      - ./chroma_db:/app/chroma_db
+    restart: unless-stopped
+    

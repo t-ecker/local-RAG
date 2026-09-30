@@ -2,7 +2,6 @@
 name = "local-rag"
 version = "0.1.0"
 description = "just a local RAG"
-readme = "README.md"
 authors = [
     { name = "t-ecker", email = "152566019+t-ecker@users.noreply.github.com" }
 ]
