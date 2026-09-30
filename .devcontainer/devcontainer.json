@@ -5,7 +5,8 @@
     },
     "containerEnv": {
         "UV_LINK_MODE": "copy",
-        "UV_PROJECT_ENVIRONMENT": "/home/vscode/.venv"
+        "UV_PROJECT_ENVIRONMENT": "/home/vscode/.venv",
+        "IN_DEVCONTAINER": "true"
     },
     "postCreateCommand": "uv sync --locked",
     "customizations": {
