@@ -38,16 +38,17 @@ setup: check-not-devcontainer ## Pull the Ollama models and create .env if missi
 
 
 build: check-not-devcontainer ## Build the app image
-	$(COMPOSE) build
+	@$(COMPOSE) build
 
 up:	check-not-devcontainer ## Start the app container
-	$(COMPOSE) up -d
+	@$(COMPOSE) up -d
+	@echo "\napp running at http://localhost:8501"
 
 down: check-not-devcontainer ## Stop and remove the app container
-	$(COMPOSE) down
+	@$(COMPOSE) down
 
 logs: check-not-devcontainer ## Tail the app container logs
-	$(COMPOSE) logs -f
+	@$(COMPOSE) logs -f
 
 
 
