@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     temperature: float = 0.1
     reasoning: bool = False
     persist_dir: Path = Path("./chroma_db")
-    reranker_model: str = "cross-encoder/ms-marco-MiniLM-L6-v2"
+    reranker_model: str
     rerank_pool_size: int = 20
     hybrid_pool_size: int = 10
 
