@@ -1,7 +1,7 @@
 [project]
 name = "local-rag"
 version = "0.1.0"
-description = "just a local RAG"
+description = "Chat with your own documents, fully local. RAG app with hybrid search, reranking and an eval pipeline, powered by Ollama"
 authors = [
     { name = "t-ecker", email = "152566019+t-ecker@users.noreply.github.com" }
 ]

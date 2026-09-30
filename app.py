@@ -62,7 +62,7 @@ def source_columns(mode: str) -> dict:
             "Relevance", min_value=0.0, max_value=1.0, format="%.2f"
         )
     else:
-        score = st.column_config.NumberColumn("Score", format="%.2f")
+        score = st.column_config.NumberColumn("Score", format="%.3f")
     return {
         "Source": st.column_config.TextColumn("Source"),
         "Page": st.column_config.TextColumn("Page"),
