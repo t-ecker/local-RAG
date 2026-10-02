@@ -13,7 +13,7 @@
   No made-up answers, no cloud, no account, just a simple web app that runs completely on your own machine.
 </p>
 
-<p align="center"><img src=".github/assets/demo.gif" width="720" alt="local-RAG demo"></p>
+<p align="center"><img src=".github/assets/ask.gif" width="720" alt="asking a question and getting an answer with sources"></p>
 
 ## Features
 
@@ -22,6 +22,8 @@
 - **Pick a scope**: choose which docs get searched
 - **Answers with sources**: every answer shows which file and page it came from
 
+<p align="center"><img src=".github/assets/upload.gif" width="560" alt="uploading and embedding a document"></p>
+
 ## How it works
 
 1. **Upload**: your files get split into small chunks and stored in a local vector database
@@ -29,6 +31,8 @@
 3. **Answer**: the best matching chunks go to a local LLM, which answers based on the info in them
 
 ## Retrieval modes
+
+<p align="center"><img src=".github/assets/mode.png" width="360" alt="retrieval mode picker"></p>
 
 | Mode | What it does | Good for |
 |---|---|---|
